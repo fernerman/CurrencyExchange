@@ -1,38 +1,67 @@
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+# Системные файлы и папки
+.DS_Store
+Thumbs.db
+*.log
+*.bak
 
-### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
-*.iws
+# Каталоги сборки и временные файлы
+build/
+out/
+target/
+*.class
+
+# Maven и Gradle
+*.iml
+.idea/
+.gradle/
+build.gradle
+settings.gradle
+mvnw
+mvnw.cmd
+*.log
+*.jar
+*.war
+*.ear
+
+# IntelliJ IDEA
+.idea/
 *.iml
 *.ipr
+*.iws
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
+# Eclipse
 .project
-.settings
-.springBeans
-.sts4-cache
+.classpath
+.settings/
+bin/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# NetBeans
+nbproject/
+*.nb-gradle/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+dist/
 
-### VS Code ###
+# VS Code
 .vscode/
 
-### Mac OS ###
-.DS_Store
+# Настройки операционных систем
+*.swp
+*.swo
+*.tmp
+
+# Секретные файлы
+*.env
+*.key
+*.pem
+*.crt
+*.p12
+*.jks
+
+# Логи сервера и временные файлы
+logs/
+tmp/
+work/
+
+# Локальные настройки
+*.properties
+*.db
