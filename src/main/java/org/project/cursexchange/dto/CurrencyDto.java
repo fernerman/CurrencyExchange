@@ -1,24 +1,17 @@
-package org.project.cursexchange.models;
+package org.project.cursexchange.dto;
 
-public class Currency {
-    private long id;
+import org.project.cursexchange.models.Currency;
+
+public class CurrencyDto {
+
     private String code;
     private String name;
     private String sign;
 
-    public Currency(long id, String code, String name, String sign) {
-        this.id = id;
+    public CurrencyDto(String code, String name, String sign) {
         this.code = code;
         this.name = name;
         this.sign = sign;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public String getCode() {
@@ -43,5 +36,8 @@ public class Currency {
 
     public void setSign(String sign) {
         this.sign = sign;
+    }
+    public Currency toEntity() {
+        return new Currency(0,this.code,this.name,this.sign);
     }
 }
