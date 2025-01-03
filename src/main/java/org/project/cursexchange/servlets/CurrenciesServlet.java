@@ -1,8 +1,10 @@
-package org.project.cursexchange;
+package org.project.cursexchange.servlets;
 
 import com.google.gson.Gson;
 import org.project.cursexchange.dao.CurrencyDao;
+import org.project.cursexchange.dao.CurrencyDaoImpl;
 import org.project.cursexchange.dto.CurrencyDto;
+import org.project.cursexchange.exceptions.DataAccesException;
 import org.project.cursexchange.models.Currency;
 
 import javax.servlet.annotation.WebServlet;
@@ -30,16 +32,13 @@ public class MainServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             String path = request.getPathInfo();
-            if(path==null) {
-                List<Currency> allCurrency=new CurrencyDao().findAll();
+            if(path==null||path.isEmpty()) {
+                List<Currency> allCurrency=new CurrencyDaoImpl().findAll();
                 proccessResponse(response, allCurrency);
-            }
-            else if(path.trim().equals("/")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             }
             else{
                 String code=path.split("/")[1];
-                Optional<Currency> d=new CurrencyDao().findByCode(code);
+                Optional<Currency> d=new CurrencyDaoImpl().findByCode(code);
                 if(d.isPresent()) {
                     proccessResponse(response, d.get());
                     response.setStatus(HttpServletResponse.SC_OK);
@@ -49,7 +48,7 @@ public class MainServlet extends HttpServlet {
                 }
             }
         }
-        catch (Exception e) {
+        catch (DataAccesException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             proccessResponse(response, e.getMessage());
         }
@@ -61,15 +60,19 @@ public class MainServlet extends HttpServlet {
             String name = request.getParameter("name");
             String sign = request.getParameter("sign");
 
+            CurrencyDao currencyDao= new CurrencyDaoImpl();
             CurrencyDto currencyDto = new CurrencyDto(code, name, sign);
-            Optional<Currency> currencySaved =new CurrencyDao().save(currencyDto.toEntity());
-            if(currencySaved.isEmpty()){
-                response.setStatus(HttpServletResponse.SC_CONFLICT);
+            boolean isSavedInDatabase =currencyDao.saveCurrency(currencyDto);
 
+            if(isSavedInDatabase){
+                response.setStatus(HttpServletResponse.SC_CREATED);
+                Optional<Currency> currency=currencyDao.findByCode(currencyDto.getCode());
+                if(currency.isPresent()) {
+                    response.getWriter().write(new Gson().toJson(currency.get()));
+                }
             }
             else {
-                response.setStatus(HttpServletResponse.SC_CREATED);
-                proccessResponse(response, currencySaved.get());
+                response.setStatus(HttpServletResponse.SC_CONFLICT);
             }
         }
         catch (Exception e) {
