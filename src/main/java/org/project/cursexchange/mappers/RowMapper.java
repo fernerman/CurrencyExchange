@@ -1,4 +1,4 @@
-package org.project.cursexchange;
+package org.project.cursexchange.mappers;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

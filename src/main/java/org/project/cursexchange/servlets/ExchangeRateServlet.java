@@ -1,13 +1,16 @@
-package org.project.cursexchange;
+package org.project.cursexchange.servlets;
 
-import com.google.gson.Gson;
-import org.project.cursexchange.dao.CurrencyDao;
-import org.project.cursexchange.dao.CurrencyDaoImpl;
+import org.project.cursexchange.Util;
 import org.project.cursexchange.dao.ExchangeCurrencyDao;
-import org.project.cursexchange.dao.ExchangeCurrencyDaoImpl;
-import org.project.cursexchange.mappers.ExchangeCurrencyMapper;
-import org.project.cursexchange.models.Currency;
+import org.project.cursexchange.exceptions.CurrencyCodeNotFoundInPath;
+import org.project.cursexchange.exceptions.CurrencyNotFound;
+import org.project.cursexchange.exceptions.DataAccesException;
+import org.project.cursexchange.exceptions.CurrencyExchangeNotFound;
+
+import org.project.cursexchange.models.ErrorResponse;
 import org.project.cursexchange.models.ExchangeCurrency;
+import org.project.cursexchange.service.ExchangeCurrencyService;
+import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,117 +18,135 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateServlet  extends HttpServlet {
-    private CurrencyDao currencyDao;
+
+    private ExchangeCurrencyService exchangeCurrencyService;
     private ExchangeCurrencyDao exchangeCurrencyDao;
-    private ExchangeCurrencyMapper exchangeCurrencyMapper;
 
     @Override
     public void init() throws ServletException {
-        currencyDao = new CurrencyDaoImpl();
-        exchangeCurrencyMapper=new ExchangeCurrencyMapper(currencyDao);
-        exchangeCurrencyDao=new ExchangeCurrencyDaoImpl(currencyDao,exchangeCurrencyMapper);
+        exchangeCurrencyService= new ExchangeCurrencyServiceImpl();
     }
 
-    private String getCorrectPath(String path) {
-        String emptyResult = "";
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            response.setContentType("application/json; charset=UTF-8");
+            String pathInfo = req.getPathInfo();
+            String codesInPath= validateCodesInPath(pathInfo);
+            String baseCode = codesInPath.substring(0, 3);
+            String targetCode = codesInPath.substring(3);
+
+            Optional<ExchangeCurrency> exchangeCurrency=exchangeCurrencyService.getExchangeCurrency(baseCode,targetCode);
+            if(exchangeCurrency.isPresent()) {
+                response.getWriter().write(Util.convertToJson(exchangeCurrency));
+                response.setStatus(HttpServletResponse.SC_OK);
+            }
+        }
+
+        catch (CurrencyCodeNotFoundInPath e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+        }
+        catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+        }
+        catch (DataAccesException e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+        }
+
+
+    }
+    private String validateCodesInPath(String path) {
+
         if (path == null || path.trim().equals("/")) {
-            return emptyResult;
+           throw  new CurrencyCodeNotFoundInPath();
+        }
+        path = path.trim();
+        if (!path.startsWith("/")) {
+            throw new CurrencyCodeNotFoundInPath();
         }
         String[] parts = path.split("/");
-        if (parts.length > 1) {
+        if (parts.length == 2) {
             String partPath = parts[1];
             if (partPath.length() == 6) {
                 return partPath;
             }
         }
-        return emptyResult;
+        throw  new CurrencyCodeNotFoundInPath();
+    }
+private boolean isValidRate(String rate) {
+    try {
+        new BigDecimal(rate);  // Пробуем преобразовать строку в BigDecimal
+        return true;  // Если преобразование успешно, значит это число
+    } catch (NumberFormatException e) {
+        return false;  // Если ошибка, значит строка не является числом
+    }
+}
+
+
+private String getRateFromForm(HttpServletRequest request) throws IOException {
+    StringBuilder sb = new StringBuilder();
+    String line;
+    // Чтение всех строк запроса
+    while ((line = request.getReader().readLine()) != null) {
+        sb.append(line);
     }
 
-    private Optional<ExchangeCurrency> getCurrencyExchange(String baseCode, String targetCode) throws SQLException {
-        Optional<Currency> baseCurrency=currencyDao.findByCode(baseCode);
-        Optional<Currency> targetCurrency=currencyDao.findByCode(targetCode);
-        return exchangeCurrencyDao.findCurrencyExchange(baseCurrency.get(),targetCurrency.get());
+    String rate = sb.toString();
+        if (isValidRate(rate)) {
+            return rate;
+        }
+        else {
+            throw new IllegalArgumentException("Invalid rate value: " + rate);
+        }
     }
-    public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
+
+
+    public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            String rateFromUser = request.getParameter("rate");
-
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json; charset=UTF-8");
+            String rateFromUser =getRateFromForm(request);
             String pathInfo=request.getPathInfo();
-            String correctPath=getCorrectPath(pathInfo);
-            if (!correctPath.isEmpty()) {
-                String baseCode = correctPath.substring(0, 3);
-                String targetCode = correctPath.substring(3);
-                Optional<ExchangeCurrency> currencyExchange=getCurrencyExchange(baseCode,targetCode);
-                if (currencyExchange.isPresent()) {
-                    Optional<ExchangeCurrency> exchangeCurrencyUpdated=exchangeCurrencyDao.updateCurrencyExchange(currencyExchange.get(),rateFromUser);
-                    if(exchangeCurrencyUpdated.isPresent()) {
-                        response.getWriter().write(new Gson().toJson(exchangeCurrencyUpdated.get()));
-                        response.setStatus(HttpServletResponse.SC_OK);
-                    }
-                    else {
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    }
-                }
-                else{
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                }
-            }
+            String correctPath= validateCodesInPath(pathInfo);
+
+            String baseCode = correctPath.substring(0, 3);
+            String targetCode = correctPath.substring(3);
+
+            ExchangeCurrency updateExchangeCurrency=exchangeCurrencyService.updateExchangeCurrency(baseCode,targetCode,rateFromUser);
+            response.getWriter().write(Util.convertToJson(updateExchangeCurrency));
+            response.setStatus(HttpServletResponse.SC_OK);
         }
-        catch (Exception e) {
+
+        catch (IllegalArgumentException e){
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+        }
+
+        catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+        }
+        catch (DataAccesException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }
     }
-    
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            String pathInfo = req.getPathInfo();
-            if(!getCorrectPath(pathInfo).isEmpty()){
-                resp.setContentType("application/json");
-                resp.setCharacterEncoding("UTF-8");
-                CurrencyDaoImpl currencyDao = new CurrencyDaoImpl();
-                ExchangeCurrencyMapper exchangeCurrencyMapper = new ExchangeCurrencyMapper(currencyDao);
-                ExchangeCurrencyDao exchangeCurrencyDao = new ExchangeCurrencyDaoImpl(currencyDao, exchangeCurrencyMapper);
 
-                String codesOfExchangeRates = req.getPathInfo().split("/")[1];
-                String baseCode = codesOfExchangeRates.substring(0, 3);
-                String targetCode = codesOfExchangeRates.substring(3);
 
-                Optional<Currency> baseCurrency=currencyDao.findByCode(baseCode);
-                Optional<Currency> targetCurrency=currencyDao.findByCode(targetCode);
-                if (baseCurrency.isPresent()&&targetCurrency.isPresent()) {
-                    Optional<ExchangeCurrency> currencyExchange=exchangeCurrencyDao.findCurrencyExchange(baseCurrency.get(),targetCurrency.get());
-                    resp.getWriter().write(new Gson().toJson(currencyExchange));
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                }
-            }
-            else {
-                resp.sendError(HttpServletResponse.SC_BAD_REQUEST);
-            }
-        }
-
-        catch (SQLException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Проверяем метод запроса
         if ("PATCH".equalsIgnoreCase(req.getMethod())) {
-            try {
-                doPatch(req, resp);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
+            doPatch(req, resp);
+        }
+        else {
             super.service(req, resp);
         }
     }

@@ -1,5 +1,1 @@
-### GET request to example server
-GET https://examples.http-client.intellij.net/get$END$
-    ?generated-in=IntelliJ IDEA
-
-###
+POST http://localhost:8080/currenices?code=GGG&name=FFF&sign=DDD

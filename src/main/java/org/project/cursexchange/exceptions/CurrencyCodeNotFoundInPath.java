@@ -1,11 +1,11 @@
 package org.project.cursexchange.exceptions;
 
-public class CurrencyExistException extends RuntimeException{
-    private static final String DEFAULT_MESSAGE = "Валюта с таким кодом уже существует";
-    public CurrencyExistException(){
+public class CurrencyCodeNotFoundInPath extends RuntimeException{
+    private static final String DEFAULT_MESSAGE = "Коды валют пары отсутствуют в адресе";
+    public CurrencyCodeNotFoundInPath(){
         super(DEFAULT_MESSAGE);
     }
-    public CurrencyExistException(String message) {
+    public CurrencyCodeNotFoundInPath(String message) {
         super(message);
     }
 }

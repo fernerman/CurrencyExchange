@@ -1,79 +1,78 @@
 package org.project.cursexchange.servlets;
 
-import com.google.gson.Gson;
+import org.project.cursexchange.DependencyFactory;
 import org.project.cursexchange.Util;
-import org.project.cursexchange.dao.*;
-import org.project.cursexchange.dto.ExchangeCurrencyDto;
-import org.project.cursexchange.exceptions.DataAccesException;
-import org.project.cursexchange.mappers.ExchangeCurrencyMapper;
+
+import org.project.cursexchange.exceptions.*;
 import org.project.cursexchange.models.ErrorResponse;
 import org.project.cursexchange.models.ExchangeCurrency;
+import org.project.cursexchange.service.ExchangeCurrencyService;
+import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.sql.SQLException;
+import java.io.IOException;;
 import java.util.List;
-import java.util.Optional;
+
 
 @WebServlet("/exchangeRates")
-public class ExchangeServlet  extends HttpServlet {
-    private CurrencyDao currencyDao;
-    private ExchangeCurrencyMapper exchangeCurrencyMapper;
-    private ExchangeCurrencyDao exchangeCurrencyDao;
+public class ExchangeRatesServlet extends HttpServlet {
+
+    private ExchangeCurrencyService exchangeCurrencyService;
+
     @Override
     public void init() throws ServletException {
-         currencyDao = new CurrencyDaoImpl();
-         exchangeCurrencyMapper=new ExchangeCurrencyMapper(currencyDao);
-         exchangeCurrencyDao=new ExchangeCurrencyDaoImpl(currencyDao, exchangeCurrencyMapper);
+        exchangeCurrencyService= new ExchangeCurrencyServiceImpl();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws IOException {
         try {
             response.setContentType("application/json; charset=UTF-8");
-            List<ExchangeCurrency> listOfExchangeCurrency = exchangeCurrencyDao.findAll();
+            var exchangeCurrencyDao=DependencyFactory.createExchangeCurrencyDao();
+            List<ExchangeCurrency> listOfExchangeCurrency = exchangeCurrencyDao.findAllCurrencyExchange();
             response.getWriter().write(Util.convertToJson(listOfExchangeCurrency));
             response.setStatus(HttpServletResponse.SC_OK);
         }
 
-        catch (DataAccesException e) {
+        catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse resp) throws ServletException, IOException {
-     try {
-         String baseCurrencyCode = request.getParameter("baseCurrencyCode");
-         String targetCurrencyCode = request.getParameter("targetCurrencyCode");
-         String rate = request.getParameter("rate");
-         var savedCurrencyExchange = getExchangeCurrency(baseCurrencyCode, targetCurrencyCode, rate);
-         if(savedCurrencyExchange.isPresent())
-         {
-             resp.getWriter().write(new Gson().toJson(savedCurrencyExchange.get()));
-             resp.setStatus(HttpServletResponse.SC_CREATED);
-         }
-        else{
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        }
-     }
-     catch (SQLException e){
-         resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-     }
-    }
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            response.setContentType("application/json; charset=UTF-8");
+            String baseCurrencyCode = request.getParameter("baseCurrencyCode");
+            String targetCurrencyCode = request.getParameter("targetCurrencyCode");
+            String rate = request.getParameter("rate");
 
-    private static Optional<ExchangeCurrency> getExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) throws SQLException {
-        ExchangeCurrencyDto exchangeCurrencyDto = new ExchangeCurrencyDto(baseCurrencyCode, targetCurrencyCode,new BigDecimal(rate));
-        CurrencyDao currencyDao = new CurrencyDaoImpl();
-        ExchangeCurrencyMapper exchangeCurrencyMapper = new ExchangeCurrencyMapper(currencyDao);
-        ExchangeCurrencyDao exchangeCurrencyDao = new ExchangeCurrencyDaoImpl(currencyDao, exchangeCurrencyMapper);
-        return exchangeCurrencyDao.saveExchangeCurrency(exchangeCurrencyDto);
+
+            ExchangeCurrency savedCurrencyExchange=exchangeCurrencyService.addExchangeCurrency(baseCurrencyCode, targetCurrencyCode, rate);
+            response.getWriter().write(Util.convertToJson(savedCurrencyExchange));
+            response.setStatus(HttpServletResponse.SC_CREATED);
+        }
+
+        catch (IllegalArgumentException ex){
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
+        }
+        catch (CurrencyExistException ex){
+            response.setStatus(HttpServletResponse.SC_CONFLICT);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
+        }
+        catch (CurrencyNotFound | CurrencyExchangeNotFound ex){
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
+        }
+        catch (DataAccesException ex){
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
+        }
     }
 }
-

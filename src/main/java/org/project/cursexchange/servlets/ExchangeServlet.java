@@ -3,11 +3,16 @@ package org.project.cursexchange.servlets;
 import org.project.cursexchange.Util;
 import org.project.cursexchange.dao.CurrencyDao;
 import org.project.cursexchange.dao.CurrencyDaoImpl;
-import org.project.cursexchange.dto.CurrencyDto;
+import org.project.cursexchange.dto.CurrencyDTO;
+import org.project.cursexchange.dto.ExchangeCalculationDTO;
+import org.project.cursexchange.exceptions.CurrencyExchangeNotFound;
 import org.project.cursexchange.exceptions.CurrencyExistException;
+import org.project.cursexchange.exceptions.CurrencyNotFound;
 import org.project.cursexchange.exceptions.DataAccesException;
 import org.project.cursexchange.models.Currency;
 import org.project.cursexchange.models.ErrorResponse;
+import org.project.cursexchange.service.ExchangeCurrencyService;
+import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,79 +22,38 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/currencies/*")
-public class CurrenciesServlet extends HttpServlet {
-    private CurrencyDao currencyDao;
+@WebServlet("/exchange/*")
+public class ExchangeServlet extends HttpServlet {
+    private ExchangeCurrencyService exchangeCurrencyService;
 
     @Override
     public void init() throws ServletException {
-        currencyDao = new CurrencyDaoImpl();
+        exchangeCurrencyService= new ExchangeCurrencyServiceImpl();
     }
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             response.setContentType("application/json; charset=UTF-8");
-            List<Currency> allCurrencies =currencyDao.findAll();
-            response.getWriter().write(Util.convertToJson(allCurrencies));
+            String codeCurrencyFrom = request.getParameter("from");
+            String codeCurrencyTo = request.getParameter("to");
+
+            String amount = request.getParameter("amount");
+            ExchangeCalculationDTO exchangeCalculationDTO=exchangeCurrencyService.getExchangeCurrencyWithConvertedAmount(codeCurrencyFrom,
+                    codeCurrencyTo,
+                    amount);
+            response.getWriter().write(Util.convertToJson(exchangeCalculationDTO));
             response.setStatus(HttpServletResponse.SC_OK);
         }
         catch (DataAccesException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }
-
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest request,HttpServletResponse response) throws IOException {
-        try {
-            response.setContentType("application/json; charset=UTF-8");
-            String code = request.getParameter("code");
-            String name = request.getParameter("name");
-            String sign = request.getParameter("sign");
-            checkParametrsIsCorrect(code,name,sign);
-            CurrencyDto currencyDto = new CurrencyDto(code, name, sign);
-            boolean isSavedCurrency =currencyDao.saveCurrency(currencyDto);
-            if(isSavedCurrency){
-                response.setStatus(HttpServletResponse.SC_CREATED);
-            }
-        }
-        catch (CurrencyExistException e) {
-            response.setStatus(HttpServletResponse.SC_CONFLICT);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-        catch (IllegalArgumentException e) {
+        catch (IllegalArgumentException  e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-        catch (DataAccesException e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (CurrencyExchangeNotFound|CurrencyNotFound  e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-    }
-    public boolean isNotEnglishLetters(String value) {
-        for (char c : value.toCharArray()) {
-            if (!Character.isLetter(c) || !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z')) {
-                return true;
-            }
-        }
-        return false;
-    }
-    private void checkParametrsIsCorrect( String code,String name,String sign ) throws  IllegalArgumentException{
-        int MAX_LENGTH_CODE = 3;
-        int MAX_LENGTH_PARAMETRS = 10;
-        if (code == null || name == null || sign == null || code.isBlank() || name.isBlank() || sign.isBlank()) {
-            throw new IllegalArgumentException("Данные не могут быть пустыми.");
-        }
-        else if(code.length()>MAX_LENGTH_CODE || !code.equals(code.toUpperCase())){
-            throw new IllegalArgumentException("Код должен быть заглавными буквами и длиной не более" + MAX_LENGTH_CODE+" символов");
-        }
-        else if ( name.length()>MAX_LENGTH_PARAMETRS||sign.length()>MAX_LENGTH_PARAMETRS) {
-            throw new IllegalArgumentException("Данные не должны превышать длины"+ MAX_LENGTH_CODE+" символов");
-        }
-        else if( isNotEnglishLetters(code) || isNotEnglishLetters(name)){
-            throw new IllegalArgumentException("Данные должны быть из английских букв");
         }
     }
 }

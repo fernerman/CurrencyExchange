@@ -2,13 +2,13 @@ package org.project.cursexchange.dto;
 
 import org.project.cursexchange.models.Currency;
 
-public class CurrencyDto {
+public class CurrencyDTO {
 
     private String code;
     private String name;
     private String sign;
 
-    public CurrencyDto(String code, String name, String sign) {
+    public CurrencyDTO(String code, String name, String sign) {
         this.code = code;
         this.name = name;
         this.sign = sign;

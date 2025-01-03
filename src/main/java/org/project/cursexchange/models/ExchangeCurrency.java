@@ -3,39 +3,40 @@ package org.project.cursexchange.models;
 import java.math.BigDecimal;
 
 public class ExchangeCurrency {
-    private long id;
-    private int baseCurrencyId;
-    private int TargetCurrencyId;
+    private int id;
+    private Currency baseCurrency;
+    private Currency targetCurrency;
+    private BigDecimal rate;
 
-    public ExchangeCurrency(long id, int baseCurrencyId, int targetCurrencyId, BigDecimal rate) {
+    public ExchangeCurrency(int id, Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
         this.id = id;
-        this.baseCurrencyId = baseCurrencyId;
-        TargetCurrencyId = targetCurrencyId;
+        this.baseCurrency = baseCurrency;
+        this.targetCurrency = targetCurrency;
         this.rate = rate;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
-    public int getBaseCurrencyId() {
-        return baseCurrencyId;
+    public Currency getBaseCurrency() {
+        return baseCurrency;
     }
 
-    public void setBaseCurrencyId(int baseCurrencyId) {
-        this.baseCurrencyId = baseCurrencyId;
+    public void setBaseCurrency(Currency baseCurrency) {
+        this.baseCurrency = baseCurrency;
     }
 
-    public int getTargetCurrencyId() {
-        return TargetCurrencyId;
+    public Currency getTargetCurrency() {
+        return targetCurrency;
     }
 
-    public void setTargetCurrencyId(int targetCurrencyId) {
-        TargetCurrencyId = targetCurrencyId;
+    public void setTargetCurrency(Currency targetCurrency) {
+        this.targetCurrency = targetCurrency;
     }
 
     public BigDecimal getRate() {
@@ -45,6 +46,4 @@ public class ExchangeCurrency {
     public void setRate(BigDecimal rate) {
         this.rate = rate;
     }
-
-    private BigDecimal rate;
 }

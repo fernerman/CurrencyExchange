@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    const host = "http://localhost:8080/currency_exchange_war_exploded"
+    const host = "http://localhost:8080"
 
     // Fetch the list of currencies and populate the select element
     function requestCurrencies() {
@@ -95,7 +95,7 @@ $(document).ready(function() {
                 $.each(response, function(index, rate) {
                     const row = $('<tr></tr>');
                     const currency = rate.baseCurrency.code + rate.targetCurrency.code;
-                    const exchangeRate = rate.rate;
+                    const exchangeRate = rate.rate.toFixed(2);
                     row.append($('<td></td>').text(currency));
                     row.append($('<td></td>').text(exchangeRate));
                     row.append($('<td></td>').html(
@@ -133,18 +133,18 @@ $(document).ready(function() {
         const pair = $('#edit-exchange-rate-modal .modal-title').text().replace('Edit ', '').replace(' Exchange Rate', '');
         const exchangeRate = $('#edit-exchange-rate-modal #exchange-rate-input').val();
 
-        // set changed values to the table row
-        const row = $(`tr:contains(${pair})`);
-        row.find('td:eq(1)').text(exchangeRate);
+
 
         // send values to the server with a patch request
         $.ajax({
             url: `${host}/exchangeRate/${pair}`,
             type: "PATCH",
             contentType : "application/x-www-form-urlencoded",
-            data: `rate=${exchangeRate}`,
+            data: `${exchangeRate}`,
             success: function() {
-
+          // set changed values to the table row
+              const row = $(`tr:contains(${pair})`);
+              row.find('td:eq(1)').text(exchangeRate);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 const error = JSON.parse(jqXHR.responseText);

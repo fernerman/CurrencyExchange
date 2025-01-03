@@ -1,12 +1,12 @@
 package org.project.cursexchange.models;
 
 public class Currency {
-    private long id;
+    private int id;
     private String code;
     private String name;
     private String sign;
 
-    public Currency(long id, String code, String name, String sign) {
+    public Currency(int id, String code, String name, String sign) {
         this.id = id;
         this.code = code;
         this.name = name;
@@ -17,7 +17,7 @@ public class Currency {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
