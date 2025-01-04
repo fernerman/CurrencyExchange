@@ -56,29 +56,35 @@ json
     { "id": 2, "name": "Euro", "code": "EUR", "sign": "€" }
 ]
 ```
-GET /currency/{code}
+#### **GET /currency/{code}**
 Retrieve details of a specific currency by its code.
 
-Response Example:
+**Response Example:**
+```
 { "id": 2, "name": "Euro", "code": "EUR", "sign": "€" }
-POST /currencies
+```
+
+#### **POST /currencies**
 Add a new currency. Send data as x-www-form-urlencoded.
 
 Request Fields:
-
+```
 name: Full name of the currency.
 code: ISO currency code.
 sign: Symbol of the currency.
+```
 Response Example:
-
-json
-Копировать код
+```
 { "id": 3, "name": "Pound Sterling", "code": "GBP", "sign": "£" }
-2. Exchange Rates
-GET /exchangeRates
+```
+
+### 2. Exchange Rates
+
+#### **GET /exchangeRates**
 Retrieve a list of all exchange rates.
 
 Response Example:
+```
 [
     {
         "id": 1,
@@ -87,9 +93,11 @@ Response Example:
         "rate": 0.99
     }
 ]
-GET /exchangeRate/{baseCode}{targetCode}
-Retrieve the exchange rate between two currencies.
+```
 
+#### ** GET /exchangeRate/{baseCode}{targetCode}**
+Retrieve the exchange rate between two currencies.
+````
 Response Example:
 {
     "id": 1,
@@ -97,44 +105,55 @@ Response Example:
     "targetCurrency": { "id": 2, "name": "EUR", "code": "EUR", "sign": "€" },
     "rate": 0.99
 }
-POST /exchangeRates
+```
+#### **POST /exchangeRates**
 Add a new exchange rate. Send data as x-www-form-urlencoded.
 
 Request Fields:
-
+````
 baseCurrencyCode: ISO code of the base currency.
 targetCurrencyCode: ISO code of the target currency.
 rate: Exchange rate from base to target currency.
+```
 Response Example:
+````
 {
     "id": 2,
     "baseCurrency": { "id": 1, "name": "USD", "code": "USD", "sign": "$" },
     "targetCurrency": { "id": 3, "name": "GBP", "code": "GBP", "sign": "£" },
     "rate": 0.72
 }
-PATCH /exchangeRate/{baseCode}{targetCode}
+```
+#### **PATCH /exchangeRate/{baseCode}{targetCode}**
+
 Update an existing exchange rate. Send data as x-www-form-urlencoded.
 
 Request Field:
-
+````
 rate: New exchange rate.
+```
 Response Example:
+````
 {
     "id": 2,
     "baseCurrency": { "id": 1, "name": "USD", "code": "USD", "sign": "$" },
     "targetCurrency": { "id": 3, "name": "GBP", "code": "GBP", "sign": "£" },
     "rate": 0.75
 }
-3. Currency Exchange
-GET /exchange
+````
+### 3. Currency Exchange
+
+#### **GET /exchange**
 Calculate the conversion of an amount from one currency to another.
 
 Query Parameters:
-
+````
 from: Base currency code.
 to: Target currency code.
 amount: Amount to convert.
+````
 Response Example:
+````
 {
     "baseCurrency": { "id": 1, "name": "USD", "code": "USD", "sign": "$" },
     "targetCurrency": { "id": 3, "name": "GBP", "code": "GBP", "sign": "£" },
@@ -142,9 +161,15 @@ Response Example:
     "amount": 100,
     "convertedAmount": 75
 }
+```
 Error Handling
+````
 { "message": "Error description" }
+````
+Errors:
+````
 Currency not found" (404)
 "Exchange rate not found" (404)
 "Invalid request parameters" (400)
 "Database unavailable" (500)
+````
