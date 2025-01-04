@@ -97,7 +97,7 @@ Response Example:
 
 #### ** GET /exchangeRate/{baseCode}{targetCode}**
 Retrieve the exchange rate between two currencies.
-````
+```
 Response Example:
 {
     "id": 1,
@@ -110,13 +110,13 @@ Response Example:
 Add a new exchange rate. Send data as x-www-form-urlencoded.
 
 Request Fields:
-````
+```
 baseCurrencyCode: ISO code of the base currency.
 targetCurrencyCode: ISO code of the target currency.
 rate: Exchange rate from base to target currency.
 ```
 Response Example:
-````
+```
 {
     "id": 2,
     "baseCurrency": { "id": 1, "name": "USD", "code": "USD", "sign": "$" },
@@ -129,31 +129,31 @@ Response Example:
 Update an existing exchange rate. Send data as x-www-form-urlencoded.
 
 Request Field:
-````
+```
 rate: New exchange rate.
 ```
 Response Example:
-````
+```
 {
     "id": 2,
     "baseCurrency": { "id": 1, "name": "USD", "code": "USD", "sign": "$" },
     "targetCurrency": { "id": 3, "name": "GBP", "code": "GBP", "sign": "£" },
     "rate": 0.75
 }
-````
+```
 ### 3. Currency Exchange
 
 #### **GET /exchange**
 Calculate the conversion of an amount from one currency to another.
 
 Query Parameters:
-````
+```
 from: Base currency code.
 to: Target currency code.
 amount: Amount to convert.
-````
+```
 Response Example:
-````
+```
 {
     "baseCurrency": { "id": 1, "name": "USD", "code": "USD", "sign": "$" },
     "targetCurrency": { "id": 3, "name": "GBP", "code": "GBP", "sign": "£" },
@@ -163,13 +163,13 @@ Response Example:
 }
 ```
 Error Handling
-````
+```
 { "message": "Error description" }
-````
+```
 Errors:
-````
+```
 Currency not found" (404)
 "Exchange rate not found" (404)
 "Invalid request parameters" (400)
 "Database unavailable" (500)
-````
+```
