@@ -38,6 +38,7 @@ public class ExchangeServlet extends HttpServlet {
             String codeCurrencyTo = request.getParameter("to");
 
             String amount = request.getParameter("amount");
+
             ExchangeCalculationDTO exchangeCalculationDTO=exchangeCurrencyService.getExchangeCurrencyWithConvertedAmount(codeCurrencyFrom,
                     codeCurrencyTo,
                     amount);

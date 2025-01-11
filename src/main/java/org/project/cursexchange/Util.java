@@ -7,7 +7,7 @@ import java.sql.*;
 public class Util {
 
     private static final String DEFAULT_DRIVER = "org.sqlite.JDBC";
-    private static final String DEFAULT_URL = "jdbc:sqlite:/opt/tomcat/bin/databases/database.db";
+    private static final String DEFAULT_URL = "jdbc:sqlite:databases/database.db";
     private static final String DEFAULT_USERNAME = "";
     private static final String DEFAULT_PASSWORD = "";
 

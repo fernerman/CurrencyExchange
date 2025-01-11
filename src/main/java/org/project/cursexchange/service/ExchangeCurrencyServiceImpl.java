@@ -85,7 +85,6 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
     public ExchangeCalculationDTO getExchangeCurrencyWithConvertedAmount(String baseCurrencyCode, String targetCurrencyCode, String amount) {
        try {
            BigDecimal amountByDigit = parseDecimal(amount);
-
            BigDecimal directRate = getDirectExchangeRate(baseCurrencyCode, targetCurrencyCode);
            if (directRate != null) {
                return buildExchangeCalculationDTO(baseCurrencyCode,
@@ -172,10 +171,11 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
                 currencyDAO.findByCode(targetCurrencyCode),
                 rate,
                 amount,
-                convertedAmount
+                convertedAmount.setScale(2, RoundingMode.HALF_UP)
         );
     }
-    private ExchangeCurrencyDTO buildExchangeCurrencyDTO(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
+    private ExchangeCurrencyDTO buildExchangeCurrencyDTO(String baseCurrencyCode,
+                                                         String targetCurrencyCode, BigDecimal rate) {
         return new ExchangeCurrencyDTO(
                 currencyDAO.findByCode(baseCurrencyCode),
                 currencyDAO.findByCode(targetCurrencyCode),

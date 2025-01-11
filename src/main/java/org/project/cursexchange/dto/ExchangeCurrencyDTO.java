@@ -3,6 +3,7 @@ package org.project.cursexchange.dto;
 import org.project.cursexchange.models.Currency;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class ExchangeCurrencyDTO {
     private Currency  currencyBase;

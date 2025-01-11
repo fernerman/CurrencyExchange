@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    const host = "http://localhost:8080"
+    const host = "http://localhost:8080/CursExchange_war_exploded/"
 
     // Fetch the list of currencies and populate the select element
     function requestCurrencies() {
@@ -145,6 +145,7 @@ $(document).ready(function() {
           // set changed values to the table row
               const row = $(`tr:contains(${pair})`);
               row.find('td:eq(1)').text(exchangeRate);
+              requestExchangeRates();
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 const error = JSON.parse(jqXHR.responseText);
