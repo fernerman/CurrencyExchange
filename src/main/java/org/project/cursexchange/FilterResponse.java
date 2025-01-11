@@ -17,6 +17,11 @@ public class FilterResponse implements Filter {
         if (servletResponse instanceof HttpServletResponse) {
             HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
             httpResponse.setContentType("application/json;charset=UTF-8");
+            httpResponse.setHeader("Access-Control-Allow-Origin", "*");
+            httpResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+            httpResponse.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+            httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
+
         }
         // Продолжение цепочки фильтров
         filterChain.doFilter(servletRequest, servletResponse);
