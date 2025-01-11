@@ -40,7 +40,6 @@ public class CurrencyServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws IOException  {
        try {
-           response.setContentType("application/json; charset=UTF-8");
            String path=req.getPathInfo();
            String code= isValidCode(path);
 

@@ -35,7 +35,6 @@ public class ExchangeRateServlet  extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
         try {
-            response.setContentType("application/json; charset=UTF-8");
             String pathInfo = req.getPathInfo();
             String codesInPath= validateCodesInPath(pathInfo);
             String baseCode = codesInPath.substring(0, 3);

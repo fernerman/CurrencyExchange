@@ -31,7 +31,6 @@ public class ExchangeRatesServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws IOException {
         try {
-            response.setContentType("application/json; charset=UTF-8");
             var exchangeCurrencyDao=DependencyFactory.createExchangeCurrencyDao();
             List<ExchangeCurrency> listOfExchangeCurrency = exchangeCurrencyDao.findAllCurrencyExchange();
             response.getWriter().write(Util.convertToJson(listOfExchangeCurrency));
@@ -47,11 +46,9 @@ public class ExchangeRatesServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            response.setContentType("application/json; charset=UTF-8");
             String baseCurrencyCode = request.getParameter("baseCurrencyCode");
             String targetCurrencyCode = request.getParameter("targetCurrencyCode");
             String rate = request.getParameter("rate");
-
 
             ExchangeCurrency savedCurrencyExchange=exchangeCurrencyService.addExchangeCurrency(baseCurrencyCode, targetCurrencyCode, rate);
             response.getWriter().write(Util.convertToJson(savedCurrencyExchange));

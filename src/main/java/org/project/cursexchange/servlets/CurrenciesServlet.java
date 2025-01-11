@@ -29,7 +29,6 @@ public class CurrenciesServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            response.setContentType("application/json; charset=UTF-8");
             List<Currency> allCurrencies =currencyDao.findAll();
             response.getWriter().write(Util.convertToJson(allCurrencies));
             response.setStatus(HttpServletResponse.SC_OK);
@@ -38,13 +37,11 @@ public class CurrenciesServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }
-
     }
 
     @Override
     protected void doPost(HttpServletRequest request,HttpServletResponse response) throws IOException {
         try {
-            response.setContentType("application/json; charset=UTF-8");
             String code = request.getParameter("code");
             String name = request.getParameter("name");
             String sign = request.getParameter("sign");

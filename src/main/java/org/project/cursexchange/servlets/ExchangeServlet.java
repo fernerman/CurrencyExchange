@@ -33,7 +33,6 @@ public class ExchangeServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            response.setContentType("application/json; charset=UTF-8");
             String codeCurrencyFrom = request.getParameter("from");
             String codeCurrencyTo = request.getParameter("to");
 
