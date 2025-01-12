@@ -25,8 +25,7 @@ import java.util.Optional;
 public class ExchangeRateServlet  extends HttpServlet {
 
     private ExchangeCurrencyService exchangeCurrencyService;
-    private ExchangeCurrencyDao exchangeCurrencyDao;
-
+    private final int MAX_LENGTH_CODE=3;
     @Override
     public void init() throws ServletException {
         exchangeCurrencyService= new ExchangeCurrencyServiceImpl();
@@ -37,8 +36,8 @@ public class ExchangeRateServlet  extends HttpServlet {
         try {
             String pathInfo = req.getPathInfo();
             String codesInPath= validateCodesInPath(pathInfo);
-            String baseCode = codesInPath.substring(0, 3);
-            String targetCode = codesInPath.substring(3);
+            String baseCode = codesInPath.substring(0, MAX_LENGTH_CODE);
+            String targetCode = codesInPath.substring(MAX_LENGTH_CODE);
 
             Optional<ExchangeCurrency> exchangeCurrency=exchangeCurrencyService.getExchangeCurrency(baseCode,targetCode);
             if(exchangeCurrency.isPresent()) {
@@ -63,29 +62,25 @@ public class ExchangeRateServlet  extends HttpServlet {
 
     }
     private String validateCodesInPath(String path) {
-
-        if (path == null || path.trim().equals("/")) {
-           throw  new CurrencyCodeNotFoundInPath();
-        }
-        path = path.trim();
-        if (!path.startsWith("/")) {
+        if (path == null || path.isBlank() || !path.startsWith("/") || path.trim().equals("/")) {
             throw new CurrencyCodeNotFoundInPath();
         }
-        String[] parts = path.split("/");
-        if (parts.length == 2) {
-            String partPath = parts[1];
-            if (partPath.length() == 6) {
-                return partPath;
-            }
+        path = path.trim();
+        int maxLengthCodeTwoCodes=MAX_LENGTH_CODE*2;
+        String regex = String.format("^/([A-Za-z]{%d})$", maxLengthCodeTwoCodes);
+        if (path.matches(regex)) {
+            return path.substring(1);
         }
-        throw  new CurrencyCodeNotFoundInPath();
+
+        throw new CurrencyCodeNotFoundInPath();
     }
+
 private boolean isValidRate(String rate) {
     try {
-        new BigDecimal(rate);  // Пробуем преобразовать строку в BigDecimal
-        return true;  // Если преобразование успешно, значит это число
+        new BigDecimal(rate);
+        return true;
     } catch (NumberFormatException e) {
-        return false;  // Если ошибка, значит строка не является числом
+        return false;
     }
 }
 
@@ -110,13 +105,12 @@ private String getRateFromForm(HttpServletRequest request) throws IOException {
 
     public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            response.setContentType("application/json; charset=UTF-8");
             String rateFromUser =getRateFromForm(request);
             String pathInfo=request.getPathInfo();
             String correctPath= validateCodesInPath(pathInfo);
 
-            String baseCode = correctPath.substring(0, 3);
-            String targetCode = correctPath.substring(3);
+            String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
+            String targetCode = correctPath.substring(MAX_LENGTH_CODE);
 
             ExchangeCurrency updateExchangeCurrency=exchangeCurrencyService.updateExchangeCurrency(baseCode,targetCode,rateFromUser);
             response.getWriter().write(Util.convertToJson(updateExchangeCurrency));

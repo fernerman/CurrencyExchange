@@ -22,6 +22,9 @@ import java.util.List;
 public class ExchangeRatesServlet extends HttpServlet {
 
     private ExchangeCurrencyService exchangeCurrencyService;
+    private final String baseCurrencyCodeParameter="baseCurrencyCode";
+    private final String targetCurrencyCodeParameter="targetCurrencyCode";
+    private final String rateParameter="rate";
 
     @Override
     public void init() throws ServletException {
@@ -36,7 +39,6 @@ public class ExchangeRatesServlet extends HttpServlet {
             response.getWriter().write(Util.convertToJson(listOfExchangeCurrency));
             response.setStatus(HttpServletResponse.SC_OK);
         }
-
         catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
@@ -46,9 +48,9 @@ public class ExchangeRatesServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            String baseCurrencyCode = request.getParameter("baseCurrencyCode");
-            String targetCurrencyCode = request.getParameter("targetCurrencyCode");
-            String rate = request.getParameter("rate");
+            String baseCurrencyCode = request.getParameter(baseCurrencyCodeParameter);
+            String targetCurrencyCode = request.getParameter(targetCurrencyCodeParameter);
+            String rate = request.getParameter(rateParameter);
 
             ExchangeCurrency savedCurrencyExchange=exchangeCurrencyService.addExchangeCurrency(baseCurrencyCode, targetCurrencyCode, rate);
             response.getWriter().write(Util.convertToJson(savedCurrencyExchange));

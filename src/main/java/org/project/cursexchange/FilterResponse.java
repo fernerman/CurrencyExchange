@@ -21,7 +21,6 @@ public class FilterResponse implements Filter {
             httpResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
             httpResponse.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
             httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
-
         }
         // Продолжение цепочки фильтров
         filterChain.doFilter(servletRequest, servletResponse);

@@ -25,7 +25,9 @@ import java.util.List;
 @WebServlet("/exchange/*")
 public class ExchangeServlet extends HttpServlet {
     private ExchangeCurrencyService exchangeCurrencyService;
-
+    private final String requestParameterFrom="from";
+    private final String requestParameterTo="to";
+    private final String requestParameterAmount="amount";
     @Override
     public void init() throws ServletException {
         exchangeCurrencyService= new ExchangeCurrencyServiceImpl();
@@ -33,10 +35,9 @@ public class ExchangeServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            String codeCurrencyFrom = request.getParameter("from");
-            String codeCurrencyTo = request.getParameter("to");
-
-            String amount = request.getParameter("amount");
+            String codeCurrencyFrom = request.getParameter(requestParameterFrom);
+            String codeCurrencyTo = request.getParameter(requestParameterTo);
+            String amount = request.getParameter(requestParameterAmount);
 
             ExchangeCalculationDTO exchangeCalculationDTO=exchangeCurrencyService.getExchangeCurrencyWithConvertedAmount(codeCurrencyFrom,
                     codeCurrencyTo,

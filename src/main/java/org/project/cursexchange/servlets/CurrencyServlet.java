@@ -18,7 +18,7 @@ import java.io.IOException;
 @WebServlet("/currency/*")
 public class CurrencyServlet extends HttpServlet {
     private CurrencyDao currencyDao;
-
+    private final int MAX_LENGTH_CODE=3;
     @Override
     public void init() throws ServletException {
         currencyDao = new CurrencyDaoImpl();
@@ -28,11 +28,11 @@ public class CurrencyServlet extends HttpServlet {
        if (path == null || path.isEmpty()) {
            throw new CurrencyNotValidCodeException();
        }
-       String[] parts = path.split("/");
-
-       if (parts.length == 2 && parts[1].length()==3) {
-           return parts[1];
-       }
+        path = path.trim();
+        String regex = String.format("^/([A-Za-z]{%d})$", MAX_LENGTH_CODE);
+        if (path.matches(regex)) {
+            return path.substring(1);
+        }
         throw new CurrencyNotValidCodeException();
 
    }
