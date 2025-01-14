@@ -5,6 +5,7 @@ import org.project.cursexchange.models.ErrorResponse;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
@@ -16,7 +17,16 @@ public class FilterResponse implements Filter {
         servletRequest.setCharacterEncoding("UTF-8");
         if (servletResponse instanceof HttpServletResponse) {
             HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
-            httpResponse.setContentType("application/json;charset=UTF-8");
+            HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+            String requestUri = httpRequest.getRequestURI();
+
+            if (requestUri.endsWith(".css") || requestUri.endsWith(".js") || requestUri.endsWith(".jpg") || requestUri.endsWith(".png")) {
+                filterChain.doFilter(servletRequest, servletResponse);
+                return;
+            }
+
+            httpResponse.setContentType("text/html;charset=UTF-8");
+
             httpResponse.setHeader("Access-Control-Allow-Origin", "*");
             httpResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
             httpResponse.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
