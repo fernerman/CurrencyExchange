@@ -1,6 +1,5 @@
 package org.project.cursexchange.servlet;
 
-import org.project.cursexchange.Util;
 import org.project.cursexchange.dto.ExchangeCalculationDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.exception.CurrencyNotFound;
@@ -19,13 +18,15 @@ import java.io.IOException;
 @WebServlet("/exchange/*")
 public class ExchangeServlet extends HttpServlet {
     private ExchangeCurrencyService exchangeCurrencyService;
-    private final String requestParameterFrom="from";
-    private final String requestParameterTo="to";
-    private final String requestParameterAmount="amount";
+    private final String requestParameterFrom = "from";
+    private final String requestParameterTo = "to";
+    private final String requestParameterAmount = "amount";
+
     @Override
     public void init() throws ServletException {
-        exchangeCurrencyService= new ExchangeCurrencyServiceImpl();
+        exchangeCurrencyService = new ExchangeCurrencyServiceImpl();
     }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
@@ -33,20 +34,18 @@ public class ExchangeServlet extends HttpServlet {
             String codeCurrencyTo = request.getParameter(requestParameterTo);
             String amount = request.getParameter(requestParameterAmount);
 
-            ExchangeCalculationDTO exchangeCalculationDTO=exchangeCurrencyService.getExchangeCurrencyWithConvertedAmount(codeCurrencyFrom,
+            ExchangeCalculationDTO exchangeCalculationDTO = exchangeCurrencyService.getExchangeCurrencyWithConvertedAmount(codeCurrencyFrom,
                     codeCurrencyTo,
                     amount);
             response.getWriter().write(Util.convertToJson(exchangeCalculationDTO));
             response.setStatus(HttpServletResponse.SC_OK);
-        }
-        catch (DataAccesException e) {
+        } catch (DataAccesException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-        catch (IllegalArgumentException  e) {
+        } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        } catch (CurrencyExchangeNotFound|CurrencyNotFound  e) {
+        } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }

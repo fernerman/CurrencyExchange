@@ -1,6 +1,5 @@
 package org.project.cursexchange.servlet;
 
-import org.project.cursexchange.Util;
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccesException;
@@ -21,51 +20,49 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @WebServlet("/exchangeRate/*")
-public class ExchangeRateServlet  extends HttpServlet {
+public class ExchangeRateServlet extends HttpServlet {
 
     private ExchangeCurrencyService exchangeCurrencyService;
-    private final int MAX_LENGTH_CODE=3;
+    private final int MAX_LENGTH_CODE = 3;
+
     @Override
     public void init() throws ServletException {
-        exchangeCurrencyService= new ExchangeCurrencyServiceImpl();
+        exchangeCurrencyService = new ExchangeCurrencyServiceImpl();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
         try {
             String pathInfo = req.getPathInfo();
-            String codesInPath= validateCodesInPath(pathInfo);
+            String codesInPath = validateCodesInPath(pathInfo);
             String baseCode = codesInPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = codesInPath.substring(MAX_LENGTH_CODE);
 
-            Optional<ExchangeRate> exchangeCurrency=exchangeCurrencyService.getExchangeCurrency(baseCode,targetCode);
-            if(exchangeCurrency.isPresent()) {
+            Optional<ExchangeRate> exchangeCurrency = exchangeCurrencyService.getExchangeCurrency(baseCode, targetCode);
+            if (exchangeCurrency.isPresent()) {
                 response.getWriter().write(Util.convertToJson(exchangeCurrency));
                 response.setStatus(HttpServletResponse.SC_OK);
             }
-        }
-
-        catch (CurrencyCodeNotFoundInPath e) {
+        } catch (CurrencyCodeNotFoundInPath e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-        catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
+        } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-        catch (DataAccesException e) {
+        } catch (DataAccesException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }
 
 
     }
+
     private String validateCodesInPath(String path) {
         if (path == null || path.isBlank() || !path.startsWith("/") || path.trim().equals("/")) {
             throw new CurrencyCodeNotFoundInPath();
         }
         path = path.trim();
-        int maxLengthCodeTwoCodes=MAX_LENGTH_CODE*2;
+        int maxLengthCodeTwoCodes = MAX_LENGTH_CODE * 2;
         String regex = String.format("^/([A-Za-z]{%d})$", maxLengthCodeTwoCodes);
         if (path.matches(regex)) {
             return path.substring(1);
@@ -74,29 +71,28 @@ public class ExchangeRateServlet  extends HttpServlet {
         throw new CurrencyCodeNotFoundInPath();
     }
 
-private boolean isValidRate(String rate) {
-    try {
-        new BigDecimal(rate);
-        return true;
-    } catch (NumberFormatException e) {
-        return false;
-    }
-}
-
-
-private String getRateFromForm(HttpServletRequest request) throws IOException {
-    StringBuilder sb = new StringBuilder();
-    String line;
-    // Чтение всех строк запроса
-    while ((line = request.getReader().readLine()) != null) {
-        sb.append(line);
+    private boolean isValidRate(String rate) {
+        try {
+            new BigDecimal(rate);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
-    String rate = sb.toString();
+
+    private String getRateFromForm(HttpServletRequest request) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        String line;
+        // Чтение всех строк запроса
+        while ((line = request.getReader().readLine()) != null) {
+            sb.append(line);
+        }
+
+        String rate = sb.toString();
         if (isValidRate(rate)) {
             return rate;
-        }
-        else {
+        } else {
             throw new IllegalArgumentException("Invalid rate value: " + rate);
         }
     }
@@ -104,28 +100,23 @@ private String getRateFromForm(HttpServletRequest request) throws IOException {
 
     public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            String rateFromUser =getRateFromForm(request);
-            String pathInfo=request.getPathInfo();
-            String correctPath= validateCodesInPath(pathInfo);
+            String rateFromUser = getRateFromForm(request);
+            String pathInfo = request.getPathInfo();
+            String correctPath = validateCodesInPath(pathInfo);
 
             String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = correctPath.substring(MAX_LENGTH_CODE);
 
-            ExchangeRate updateExchangeRate =exchangeCurrencyService.updateExchangeCurrency(baseCode,targetCode,rateFromUser);
+            ExchangeRate updateExchangeRate = exchangeCurrencyService.updateExchangeCurrency(baseCode, targetCode, rateFromUser);
             response.getWriter().write(Util.convertToJson(updateExchangeRate));
             response.setStatus(HttpServletResponse.SC_OK);
-        }
-
-        catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-
-        catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
+        } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-        catch (DataAccesException e) {
+        } catch (DataAccesException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }
@@ -137,8 +128,7 @@ private String getRateFromForm(HttpServletRequest request) throws IOException {
         // Проверяем метод запроса
         if ("PATCH".equalsIgnoreCase(req.getMethod())) {
             doPatch(req, resp);
-        }
-        else {
+        } else {
             super.service(req, resp);
         }
     }

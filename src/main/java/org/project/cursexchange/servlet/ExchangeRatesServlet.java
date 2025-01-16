@@ -1,8 +1,5 @@
 package org.project.cursexchange.servlet;
 
-import org.project.cursexchange.DependencyFactory;
-import org.project.cursexchange.Util;
-
 import org.project.cursexchange.exception.*;
 import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.model.ExchangeRate;
@@ -22,24 +19,23 @@ import java.util.List;
 public class ExchangeRatesServlet extends HttpServlet {
 
     private ExchangeCurrencyService exchangeCurrencyService;
-    private final String baseCurrencyCodeParameter="baseCurrencyCode";
-    private final String targetCurrencyCodeParameter="targetCurrencyCode";
-    private final String rateParameter="rate";
+    private final String baseCurrencyCodeParameter = "baseCurrencyCode";
+    private final String targetCurrencyCodeParameter = "targetCurrencyCode";
+    private final String rateParameter = "rate";
 
     @Override
     public void init() throws ServletException {
-        exchangeCurrencyService= new ExchangeCurrencyServiceImpl();
+        exchangeCurrencyService = new ExchangeCurrencyServiceImpl();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws IOException {
         try {
-            var exchangeCurrencyDao=DependencyFactory.createExchangeCurrencyDao();
+            var exchangeCurrencyDao = DependencyFactory.createExchangeCurrencyDao();
             List<ExchangeRate> listOfExchangeRate = exchangeCurrencyDao.findAllCurrencyExchange();
             response.getWriter().write(Util.convertToJson(listOfExchangeRate));
             response.setStatus(HttpServletResponse.SC_OK);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }
@@ -52,24 +48,19 @@ public class ExchangeRatesServlet extends HttpServlet {
             String targetCurrencyCode = request.getParameter(targetCurrencyCodeParameter);
             String rate = request.getParameter(rateParameter);
 
-            ExchangeRate savedCurrencyExchange=exchangeCurrencyService.addExchangeCurrency(baseCurrencyCode, targetCurrencyCode, rate);
+            ExchangeRate savedCurrencyExchange = exchangeCurrencyService.addExchangeCurrency(baseCurrencyCode, targetCurrencyCode, rate);
             response.getWriter().write(Util.convertToJson(savedCurrencyExchange));
             response.setStatus(HttpServletResponse.SC_CREATED);
-        }
-
-        catch (IllegalArgumentException ex){
+        } catch (IllegalArgumentException ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
-        }
-        catch (CurrencyExistException ex){
+        } catch (CurrencyExistException ex) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
-        }
-        catch (CurrencyNotFound | CurrencyExchangeNotFound ex){
+        } catch (CurrencyNotFound | CurrencyExchangeNotFound ex) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
-        }
-        catch (DataAccesException ex){
+        } catch (DataAccesException ex) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
         }

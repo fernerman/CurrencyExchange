@@ -1,10 +1,12 @@
 package org.project.cursexchange.exception;
 
-public class CurrencyExchangeNotFound extends RuntimeException{
+public class CurrencyExchangeNotFound extends RuntimeException {
     private static final String DEFAULT_MESSAGE = "Обменный курс для пары не найден";
-    public CurrencyExchangeNotFound(){
+
+    public CurrencyExchangeNotFound() {
         super(DEFAULT_MESSAGE);
     }
+
     public CurrencyExchangeNotFound(String message) {
         super(message);
     }

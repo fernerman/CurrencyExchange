@@ -14,7 +14,8 @@ public class ErrorResponse {
     public void setMessage(String message) {
         this.message = message;
     }
-    public static ErrorResponse sendError(Exception exception){
+
+    public static ErrorResponse sendError(Exception exception) {
         return new ErrorResponse(exception.getMessage());
     }
 }

@@ -1,4 +1,5 @@
 package org.project.cursexchange.mapper;
+
 import org.project.cursexchange.dao.CurrencyDao;
 import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.model.ExchangeRate;
@@ -24,6 +25,6 @@ public class ExchangeCurrencyMapper implements RowMapper<ExchangeRate> {
 
         Currency baseCurrency = currencyDao.findById(baseCurrencyId).orElse(null);
         Currency targetCurrency = currencyDao.findById(targetCurrencyId).orElse(null);
-        return new ExchangeRate(id, baseCurrency, targetCurrency,rate);
+        return new ExchangeRate(id, baseCurrency, targetCurrency, rate);
     }
 }

@@ -37,7 +37,8 @@ public class CurrencyDTO {
     public void setSign(String sign) {
         this.sign = sign;
     }
+
     public Currency toEntity() {
-        return new Currency(0,this.code,this.name,this.sign);
+        return new Currency(0, this.code, this.name, this.sign);
     }
 }

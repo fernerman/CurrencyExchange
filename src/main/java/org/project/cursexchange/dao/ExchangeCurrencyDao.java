@@ -10,8 +10,12 @@ import java.util.Optional;
 
 public interface ExchangeCurrencyDao {
     Optional<ExchangeRate> findCurrencyExchangeById(Currency baseCurrency, Currency targetCurrency) throws SQLException;
+
     boolean saveCurrencyExchange(ExchangeCurrencyDTO exchangeCurrencyDto) throws SQLException;
-    boolean updateRateCurrencyExchange(ExchangeRate exchangeRate, String value ) throws SQLException;
+
+    boolean updateRateCurrencyExchange(ExchangeRate exchangeRate, String value) throws SQLException;
+
     List<ExchangeRate> findCurrencyExchangeByTargetCode(String code) throws SQLException;
+
     List<ExchangeRate> findAllCurrencyExchange() throws SQLException;
 }

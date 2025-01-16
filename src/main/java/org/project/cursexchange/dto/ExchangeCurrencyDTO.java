@@ -5,7 +5,7 @@ import org.project.cursexchange.model.Currency;
 import java.math.BigDecimal;
 
 public class ExchangeCurrencyDTO {
-    private Currency  currencyBase;
+    private Currency currencyBase;
     private Currency currencyTarget;
     private BigDecimal rate;
 
