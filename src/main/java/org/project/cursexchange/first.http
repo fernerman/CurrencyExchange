@@ -1,1 +1,0 @@
-POST http://localhost:8080/currenices?code=GGG&name=FFF&sign=DDD

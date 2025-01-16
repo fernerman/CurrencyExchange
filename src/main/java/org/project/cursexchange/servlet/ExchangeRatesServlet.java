@@ -1,11 +1,11 @@
-package org.project.cursexchange.servlets;
+package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.DependencyFactory;
 import org.project.cursexchange.Util;
 
-import org.project.cursexchange.exceptions.*;
-import org.project.cursexchange.models.ErrorResponse;
-import org.project.cursexchange.models.ExchangeCurrency;
+import org.project.cursexchange.exception.*;
+import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.model.ExchangeRate;
 import org.project.cursexchange.service.ExchangeCurrencyService;
 import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
 
@@ -35,8 +35,8 @@ public class ExchangeRatesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws IOException {
         try {
             var exchangeCurrencyDao=DependencyFactory.createExchangeCurrencyDao();
-            List<ExchangeCurrency> listOfExchangeCurrency = exchangeCurrencyDao.findAllCurrencyExchange();
-            response.getWriter().write(Util.convertToJson(listOfExchangeCurrency));
+            List<ExchangeRate> listOfExchangeRate = exchangeCurrencyDao.findAllCurrencyExchange();
+            response.getWriter().write(Util.convertToJson(listOfExchangeRate));
             response.setStatus(HttpServletResponse.SC_OK);
         }
         catch (Exception e) {
@@ -52,7 +52,7 @@ public class ExchangeRatesServlet extends HttpServlet {
             String targetCurrencyCode = request.getParameter(targetCurrencyCodeParameter);
             String rate = request.getParameter(rateParameter);
 
-            ExchangeCurrency savedCurrencyExchange=exchangeCurrencyService.addExchangeCurrency(baseCurrencyCode, targetCurrencyCode, rate);
+            ExchangeRate savedCurrencyExchange=exchangeCurrencyService.addExchangeCurrency(baseCurrencyCode, targetCurrencyCode, rate);
             response.getWriter().write(Util.convertToJson(savedCurrencyExchange));
             response.setStatus(HttpServletResponse.SC_CREATED);
         }

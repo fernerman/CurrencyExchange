@@ -1,14 +1,14 @@
-package org.project.cursexchange.models;
+package org.project.cursexchange.model;
 
 import java.math.BigDecimal;
 
-public class ExchangeCurrency {
+public class ExchangeRate {
     private int id;
     private Currency baseCurrency;
     private Currency targetCurrency;
     private BigDecimal rate;
 
-    public ExchangeCurrency(int id, Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
+    public ExchangeRate(int id, Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
         this.id = id;
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;

@@ -1,6 +1,6 @@
-package org.project.cursexchange.mappers;
+package org.project.cursexchange.mapper;
 
-import org.project.cursexchange.models.Currency;
+import org.project.cursexchange.model.Currency;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

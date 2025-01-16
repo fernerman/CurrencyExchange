@@ -1,4 +1,4 @@
-package org.project.cursexchange.models;
+package org.project.cursexchange.dto;
 
 public class ErrorResponse {
     private String message;

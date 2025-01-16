@@ -1,11 +1,11 @@
 package org.project.cursexchange.dao;
 
 import org.project.cursexchange.dto.CurrencyDTO;
-import org.project.cursexchange.exceptions.CurrencyExistException;
-import org.project.cursexchange.exceptions.CurrencyNotFound;
-import org.project.cursexchange.exceptions.DataAccesException;
-import org.project.cursexchange.mappers.CurrencyRowMapper;
-import org.project.cursexchange.models.Currency;
+import org.project.cursexchange.exception.CurrencyExistException;
+import org.project.cursexchange.exception.CurrencyNotFound;
+import org.project.cursexchange.exception.DataAccesException;
+import org.project.cursexchange.mapper.CurrencyRowMapper;
+import org.project.cursexchange.model.Currency;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;

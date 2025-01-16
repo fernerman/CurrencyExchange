@@ -1,16 +1,14 @@
 package org.project.cursexchange.dao;
 
 import org.project.cursexchange.dto.ExchangeCurrencyDTO;
-import org.project.cursexchange.exceptions.CurrencyExchangeNotFound;
-import org.project.cursexchange.mappers.ExchangeCurrencyMapper;
-import org.project.cursexchange.models.Currency;
-import org.project.cursexchange.models.ExchangeCurrency;
+import org.project.cursexchange.mapper.ExchangeCurrencyMapper;
+import org.project.cursexchange.model.Currency;
+import org.project.cursexchange.model.ExchangeRate;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ExchangeCurrencyDaoImpl extends BaseDao<ExchangeCurrency> implements ExchangeCurrencyDao {
+public class ExchangeCurrencyDaoImpl extends BaseDao<ExchangeRate> implements ExchangeCurrencyDao {
     private final String nameExchangeCurrencyTable = "ExchangeRates";
     private  final CurrencyDao currencyDao;
     private  final ExchangeCurrencyMapper exchangeCurrencyMapper;
@@ -21,11 +19,11 @@ public class ExchangeCurrencyDaoImpl extends BaseDao<ExchangeCurrency> implement
         this.exchangeCurrencyMapper = exchangeCurrencyMapper;
     }
     @Override
-    public List<ExchangeCurrency> findAllCurrencyExchange() throws SQLException {
+    public List<ExchangeRate> findAllCurrencyExchange() throws SQLException {
         return findAll(nameExchangeCurrencyTable,exchangeCurrencyMapper);
     }
     @Override
-    public Optional<ExchangeCurrency> findCurrencyExchangeById(Currency baseCurrency, Currency targetCurrency) throws SQLException {
+    public Optional<ExchangeRate> findCurrencyExchangeById(Currency baseCurrency, Currency targetCurrency) throws SQLException {
         String[] fields = {"BaseCurrencyId", "TargetCurrencyId"};
         Object[] values = {baseCurrency.getId(), targetCurrency.getId()};
         return findByFields(fields,values,nameExchangeCurrencyTable,exchangeCurrencyMapper);
@@ -39,8 +37,8 @@ public class ExchangeCurrencyDaoImpl extends BaseDao<ExchangeCurrency> implement
     }
 
     @Override
-    public boolean updateRateCurrencyExchange(ExchangeCurrency exchangeCurrency, String value) throws SQLException {
-        boolean isUpdate= updateField("rate",value,exchangeCurrency.getId(),nameExchangeCurrencyTable);
+    public boolean updateRateCurrencyExchange(ExchangeRate exchangeRate, String value) throws SQLException {
+        boolean isUpdate= updateField("rate",value, exchangeRate.getId(),nameExchangeCurrencyTable);
         if(isUpdate){
             return true;
         }
@@ -48,7 +46,7 @@ public class ExchangeCurrencyDaoImpl extends BaseDao<ExchangeCurrency> implement
     }
 
     @Override
-    public List<ExchangeCurrency> findCurrencyExchangeByTargetCode(String code) throws SQLException {
+    public List<ExchangeRate> findCurrencyExchangeByTargetCode(String code) throws SQLException {
         String joinCondition=nameExchangeCurrencyTable+".TargetCurrencyId = Currencies.id";
         return findByFieldWithJoin(nameExchangeCurrencyTable,"code",code,"Currencies",joinCondition,exchangeCurrencyMapper);
     }

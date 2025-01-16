@@ -1,13 +1,13 @@
-package org.project.cursexchange.servlets;
+package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.Util;
 import org.project.cursexchange.dao.CurrencyDao;
 import org.project.cursexchange.dao.CurrencyDaoImpl;
 import org.project.cursexchange.dto.CurrencyDTO;
-import org.project.cursexchange.exceptions.CurrencyExistException;
-import org.project.cursexchange.exceptions.DataAccesException;
-import org.project.cursexchange.models.Currency;
-import org.project.cursexchange.models.ErrorResponse;
+import org.project.cursexchange.exception.CurrencyExistException;
+import org.project.cursexchange.exception.DataAccesException;
+import org.project.cursexchange.model.Currency;
+import org.project.cursexchange.dto.ErrorResponse;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;

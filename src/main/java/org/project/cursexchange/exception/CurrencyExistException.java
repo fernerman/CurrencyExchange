@@ -1,4 +1,4 @@
-package org.project.cursexchange.exceptions;
+package org.project.cursexchange.exception;
 
 public class CurrencyExistException extends RuntimeException{
     private static final String DEFAULT_MESSAGE = "Валюта с таким кодом уже существует";

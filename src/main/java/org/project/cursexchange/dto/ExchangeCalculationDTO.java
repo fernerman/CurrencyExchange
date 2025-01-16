@@ -1,6 +1,6 @@
 package org.project.cursexchange.dto;
 
-import org.project.cursexchange.models.Currency;
+import org.project.cursexchange.model.Currency;
 
 import java.math.BigDecimal;
 

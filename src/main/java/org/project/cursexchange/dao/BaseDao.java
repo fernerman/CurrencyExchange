@@ -1,7 +1,7 @@
 package org.project.cursexchange.dao;
 
 import org.project.cursexchange.Util;
-import org.project.cursexchange.mappers.RowMapper;
+import org.project.cursexchange.mapper.RowMapper;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

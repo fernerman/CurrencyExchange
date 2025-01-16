@@ -1,8 +1,5 @@
 package org.project.cursexchange;
 
-import org.project.cursexchange.exceptions.DataAccesException;
-import org.project.cursexchange.models.ErrorResponse;
-
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +16,7 @@ public class FilterResponse implements Filter {
             HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
             HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
             String requestUri = httpRequest.getRequestURI();
+
 
             if (requestUri.endsWith(".css") || requestUri.endsWith(".js") || requestUri.endsWith(".jpg") || requestUri.endsWith(".png")) {
                 filterChain.doFilter(servletRequest, servletResponse);

@@ -4,12 +4,12 @@ import org.project.cursexchange.dao.CurrencyDao;
 import org.project.cursexchange.dao.ExchangeCurrencyDao;
 import org.project.cursexchange.dto.ExchangeCalculationDTO;
 import org.project.cursexchange.dto.ExchangeCurrencyDTO;
-import org.project.cursexchange.exceptions.CurrencyExchangeNotFound;
-import org.project.cursexchange.exceptions.CurrencyExistException;
-import org.project.cursexchange.exceptions.CurrencyNotFound;
-import org.project.cursexchange.exceptions.DataAccesException;
-import org.project.cursexchange.models.Currency;
-import org.project.cursexchange.models.ExchangeCurrency;
+import org.project.cursexchange.exception.CurrencyExchangeNotFound;
+import org.project.cursexchange.exception.CurrencyExistException;
+import org.project.cursexchange.exception.CurrencyNotFound;
+import org.project.cursexchange.exception.DataAccesException;
+import org.project.cursexchange.model.Currency;
+import org.project.cursexchange.model.ExchangeRate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
@@ -27,7 +27,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
     }
 
     @Override
-    public Optional<ExchangeCurrency> getExchangeCurrency(String currencyBaseCode, String currencyTargetCode) {
+    public Optional<ExchangeRate> getExchangeCurrency(String currencyBaseCode, String currencyTargetCode) {
         try {
             Currency baseCurrency=currencyDAO.findByCode(currencyBaseCode);
             Currency targetCurrency=currencyDAO.findByCode(currencyTargetCode);
@@ -39,7 +39,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
     }
 
     @Override
-    public ExchangeCurrency addExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) {
+    public ExchangeRate addExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) {
         try {
             if (baseCurrencyCode == null || targetCurrencyCode == null || rate == null || baseCurrencyCode.isBlank() || targetCurrencyCode.isBlank() || rate.isBlank()) {
                 throw new IllegalArgumentException("Данные не могут быть пустыми.");
@@ -48,7 +48,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
             if(baseCurrencyCode.equals(targetCurrencyCode)) {
                 throw new CurrencyExistException("Невозможно добавить обмен валютами");
             }
-            Optional<ExchangeCurrency> exchangeCurrencyOptional=getExchangeCurrency(baseCurrencyCode,targetCurrencyCode);
+            Optional<ExchangeRate> exchangeCurrencyOptional=getExchangeCurrency(baseCurrencyCode,targetCurrencyCode);
             if (exchangeCurrencyOptional.isPresent()) {
                 throw new CurrencyExistException("Валютная пара уже существует");
             }
@@ -64,13 +64,13 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
     }
 
     @Override
-    public ExchangeCurrency updateExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) {
+    public ExchangeRate updateExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) {
         try {
             String rateChecked=parseDecimal(rate).toString();
-            Optional<ExchangeCurrency> exchangeCurrencyOptional=getExchangeCurrency(baseCurrencyCode,targetCurrencyCode);
+            Optional<ExchangeRate> exchangeCurrencyOptional=getExchangeCurrency(baseCurrencyCode,targetCurrencyCode);
             if(exchangeCurrencyOptional.isPresent()) {
-                ExchangeCurrency exchangeCurrency=exchangeCurrencyOptional.get();
-                if(exchangeCurrencyDao.updateRateCurrencyExchange(exchangeCurrency,rateChecked)){
+                ExchangeRate exchangeRate =exchangeCurrencyOptional.get();
+                if(exchangeCurrencyDao.updateRateCurrencyExchange(exchangeRate,rateChecked)){
                     return getExchangeCurrency(baseCurrencyCode,targetCurrencyCode).get();
                 }
             }
@@ -140,29 +140,29 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
         return reverseRate != null ? BigDecimal.ONE.divide(reverseRate, 2, RoundingMode.HALF_UP) : null;
     }
 
-    private Optional<ExchangeCurrency> findCurrencyPair(List<ExchangeCurrency> list1, List<ExchangeCurrency> list2){
+    private Optional<ExchangeRate> findCurrencyPair(List<ExchangeRate> list1, List<ExchangeRate> list2){
         return list1.stream()
                 .filter(ec1 -> list2.stream()
                         .anyMatch(ec2 -> ec1.getBaseCurrency().getCode().equals(ec2.getBaseCurrency().getCode()))) // Проверяем совпадение поля baseCurrency
                 .findFirst();
     }
     private BigDecimal getDerivedExchangeRate(String baseCurrencyCode, String targetCurrencyCode) throws CurrencyNotFound, SQLException {
-            List<ExchangeCurrency> basesExchange = exchangeCurrencyDao.findCurrencyExchangeByTargetCode(baseCurrencyCode);
-            List<ExchangeCurrency> targetsExchange = exchangeCurrencyDao.findCurrencyExchangeByTargetCode(targetCurrencyCode);
+            List<ExchangeRate> basesExchange = exchangeCurrencyDao.findCurrencyExchangeByTargetCode(baseCurrencyCode);
+            List<ExchangeRate> targetsExchange = exchangeCurrencyDao.findCurrencyExchangeByTargetCode(targetCurrencyCode);
 
-            Optional<ExchangeCurrency> commonCurrency=findCurrencyPair(basesExchange,targetsExchange);
-            Optional<ExchangeCurrency> commonCurrencyInverse=findCurrencyPair(targetsExchange,basesExchange);
+            Optional<ExchangeRate> commonCurrency=findCurrencyPair(basesExchange,targetsExchange);
+            Optional<ExchangeRate> commonCurrencyInverse=findCurrencyPair(targetsExchange,basesExchange);
            if (commonCurrency.isPresent() && commonCurrencyInverse.isPresent()) {
-               ExchangeCurrency baseExchange=commonCurrency.get();
-               ExchangeCurrency targetExchange=commonCurrencyInverse.get();
+               ExchangeRate baseExchange=commonCurrency.get();
+               ExchangeRate targetExchange=commonCurrencyInverse.get();
                return targetExchange.getRate().divide(baseExchange.getRate(), 2, RoundingMode.HALF_UP);
            }
            throw new CurrencyNotFound("Валютная пара не найдена.");
     }
 
     private BigDecimal getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
-        Optional<ExchangeCurrency> exchangeCurrency = getExchangeCurrency(baseCurrencyCode, targetCurrencyCode);
-        return exchangeCurrency.map(ExchangeCurrency::getRate).orElse(null);
+        Optional<ExchangeRate> exchangeCurrency = getExchangeCurrency(baseCurrencyCode, targetCurrencyCode);
+        return exchangeCurrency.map(ExchangeRate::getRate).orElse(null);
     }
 
     private ExchangeCalculationDTO buildExchangeCalculationDTO(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {

@@ -1,14 +1,13 @@
-package org.project.cursexchange.servlets;
+package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.Util;
-import org.project.cursexchange.dao.ExchangeCurrencyDao;
-import org.project.cursexchange.exceptions.CurrencyCodeNotFoundInPath;
-import org.project.cursexchange.exceptions.CurrencyNotFound;
-import org.project.cursexchange.exceptions.DataAccesException;
-import org.project.cursexchange.exceptions.CurrencyExchangeNotFound;
+import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
+import org.project.cursexchange.exception.CurrencyNotFound;
+import org.project.cursexchange.exception.DataAccesException;
+import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 
-import org.project.cursexchange.models.ErrorResponse;
-import org.project.cursexchange.models.ExchangeCurrency;
+import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.model.ExchangeRate;
 import org.project.cursexchange.service.ExchangeCurrencyService;
 import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
 
@@ -39,7 +38,7 @@ public class ExchangeRateServlet  extends HttpServlet {
             String baseCode = codesInPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = codesInPath.substring(MAX_LENGTH_CODE);
 
-            Optional<ExchangeCurrency> exchangeCurrency=exchangeCurrencyService.getExchangeCurrency(baseCode,targetCode);
+            Optional<ExchangeRate> exchangeCurrency=exchangeCurrencyService.getExchangeCurrency(baseCode,targetCode);
             if(exchangeCurrency.isPresent()) {
                 response.getWriter().write(Util.convertToJson(exchangeCurrency));
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -112,8 +111,8 @@ private String getRateFromForm(HttpServletRequest request) throws IOException {
             String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = correctPath.substring(MAX_LENGTH_CODE);
 
-            ExchangeCurrency updateExchangeCurrency=exchangeCurrencyService.updateExchangeCurrency(baseCode,targetCode,rateFromUser);
-            response.getWriter().write(Util.convertToJson(updateExchangeCurrency));
+            ExchangeRate updateExchangeRate =exchangeCurrencyService.updateExchangeCurrency(baseCode,targetCode,rateFromUser);
+            response.getWriter().write(Util.convertToJson(updateExchangeRate));
             response.setStatus(HttpServletResponse.SC_OK);
         }
 

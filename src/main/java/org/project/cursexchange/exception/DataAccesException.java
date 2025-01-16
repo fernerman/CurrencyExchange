@@ -1,4 +1,4 @@
-package org.project.cursexchange.exceptions;
+package org.project.cursexchange.exception;
 
 public class DataAccesException extends RuntimeException{
     private static final String DEFAULT_MESSAGE="Ошибка при выполнении запроса к базе данных";

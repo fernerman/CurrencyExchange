@@ -1,16 +1,11 @@
-package org.project.cursexchange.servlets;
+package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.Util;
-import org.project.cursexchange.dao.CurrencyDao;
-import org.project.cursexchange.dao.CurrencyDaoImpl;
-import org.project.cursexchange.dto.CurrencyDTO;
 import org.project.cursexchange.dto.ExchangeCalculationDTO;
-import org.project.cursexchange.exceptions.CurrencyExchangeNotFound;
-import org.project.cursexchange.exceptions.CurrencyExistException;
-import org.project.cursexchange.exceptions.CurrencyNotFound;
-import org.project.cursexchange.exceptions.DataAccesException;
-import org.project.cursexchange.models.Currency;
-import org.project.cursexchange.models.ErrorResponse;
+import org.project.cursexchange.exception.CurrencyExchangeNotFound;
+import org.project.cursexchange.exception.CurrencyNotFound;
+import org.project.cursexchange.exception.DataAccesException;
+import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.service.ExchangeCurrencyService;
 import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
 
@@ -20,7 +15,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 
 @WebServlet("/exchange/*")
 public class ExchangeServlet extends HttpServlet {

@@ -1,4 +1,4 @@
-package org.project.cursexchange.models;
+package org.project.cursexchange.model;
 
 public class Currency {
     private int id;

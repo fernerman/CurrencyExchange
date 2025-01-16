@@ -1,7 +1,7 @@
 package org.project.cursexchange.dao;
 
 import org.project.cursexchange.dto.CurrencyDTO;
-import org.project.cursexchange.models.Currency;
+import org.project.cursexchange.model.Currency;
 
 import java.util.List;
 import java.util.Optional;

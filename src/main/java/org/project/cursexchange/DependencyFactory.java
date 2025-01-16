@@ -3,7 +3,7 @@ package org.project.cursexchange;
 import org.project.cursexchange.dao.CurrencyDao;
 import org.project.cursexchange.dao.CurrencyDaoImpl;
 import org.project.cursexchange.dao.ExchangeCurrencyDaoImpl;
-import org.project.cursexchange.mappers.ExchangeCurrencyMapper;
+import org.project.cursexchange.mapper.ExchangeCurrencyMapper;
 
 public class DependencyFactory {
     public static CurrencyDao createCurrencyDao() {
