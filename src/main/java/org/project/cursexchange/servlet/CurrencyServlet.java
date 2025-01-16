@@ -1,6 +1,6 @@
 package org.project.cursexchange.servlet;
 
-import org.project.cursexchange.dao.CurrencyDao;
+import org.project.cursexchange.dao.Dao;
 import org.project.cursexchange.dao.CurrencyDaoImpl;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.CurrencyNotValidCodeException;
@@ -18,12 +18,12 @@ import java.io.IOException;
 
 @WebServlet("/currency/*")
 public class CurrencyServlet extends HttpServlet {
-    private CurrencyDao currencyDao;
+    private Dao dao;
     private final int MAX_LENGTH_CODE = 3;
 
     @Override
     public void init() throws ServletException {
-        currencyDao = new CurrencyDaoImpl();
+        dao = new CurrencyDaoImpl();
     }
 
     private String isValidCode(String path) throws CurrencyNotValidCodeException {
@@ -45,7 +45,7 @@ public class CurrencyServlet extends HttpServlet {
             String path = req.getPathInfo();
             String code = isValidCode(path);
 
-            Currency currencyFoundByCode = currencyDao.findByCode(code);
+            Currency currencyFoundByCode = dao.findByCode(code);
             response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().write(Util.convertToJson(currencyFoundByCode));
         } catch (CurrencyNotValidCodeException ex) {

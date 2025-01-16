@@ -1,6 +1,6 @@
 package org.project.cursexchange.service;
 
-import org.project.cursexchange.dao.CurrencyDao;
+import org.project.cursexchange.dao.Dao;
 import org.project.cursexchange.dto.ExchangeCalculationDTO;
 import org.project.cursexchange.dto.ExchangeCurrencyDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
@@ -19,20 +19,20 @@ import java.util.Optional;
 public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
 
     private final ExchangeCurrencyDao exchangeCurrencyDao;
-    private final CurrencyDao currencyDAO;
+    private final Dao DAO;
 
     public ExchangeCurrencyServiceImpl() {
         this.exchangeCurrencyDao = DependencyFactory.createExchangeCurrencyDao();
 
-        this.currencyDAO = DependencyFactory.createCurrencyDao();
+        this.DAO = DependencyFactory.createCurrencyDao();
 
     }
 
     @Override
     public Optional<ExchangeRate> getExchangeCurrency(String currencyBaseCode, String currencyTargetCode) {
         try {
-            Currency baseCurrency = currencyDAO.findByCode(currencyBaseCode);
-            Currency targetCurrency = currencyDAO.findByCode(currencyTargetCode);
+            Currency baseCurrency = DAO.findByCode(currencyBaseCode);
+            Currency targetCurrency = DAO.findByCode(currencyTargetCode);
             return exchangeCurrencyDao.findCurrencyExchangeById(baseCurrency, targetCurrency);
         } catch (SQLException e) {
             throw new DataAccesException();
@@ -153,11 +153,11 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
     }
 
     private ExchangeCalculationDTO buildExchangeCalculationDTO(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
-        return new ExchangeCalculationDTO(currencyDAO.findByCode(baseCurrencyCode), currencyDAO.findByCode(targetCurrencyCode), rate, amount, convertedAmount.setScale(2, RoundingMode.HALF_UP));
+        return new ExchangeCalculationDTO(DAO.findByCode(baseCurrencyCode), DAO.findByCode(targetCurrencyCode), rate, amount, convertedAmount.setScale(2, RoundingMode.HALF_UP));
     }
 
     private ExchangeCurrencyDTO buildExchangeCurrencyDTO(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
-        return new ExchangeCurrencyDTO(currencyDAO.findByCode(baseCurrencyCode), currencyDAO.findByCode(targetCurrencyCode), rate);
+        return new ExchangeCurrencyDTO(DAO.findByCode(baseCurrencyCode), DAO.findByCode(targetCurrencyCode), rate);
     }
 
 }

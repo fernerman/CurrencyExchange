@@ -1,6 +1,6 @@
 package org.project.cursexchange.servlet;
 
-import org.project.cursexchange.dao.CurrencyDao;
+import org.project.cursexchange.dao.Dao;
 import org.project.cursexchange.dao.CurrencyDaoImpl;
 import org.project.cursexchange.dto.CurrencyDTO;
 import org.project.cursexchange.exception.CurrencyExistException;
@@ -18,20 +18,20 @@ import java.util.List;
 
 @WebServlet("/currencies")
 public class CurrenciesServlet extends HttpServlet {
-    private CurrencyDao currencyDao;
+    private Dao dao;
     private final String requestParameterCode = "code";
     private final String requestParameterName = "name";
     private final String requestParameterSign = "sign";
 
     @Override
     public void init() throws ServletException {
-        currencyDao = new CurrencyDaoImpl();
+        dao = new CurrencyDaoImpl();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            List<Currency> allCurrencies = currencyDao.findAll();
+            List<Currency> allCurrencies = dao.findAll();
             response.getWriter().write(Util.convertToJson(allCurrencies));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (DataAccesException e) {
@@ -49,10 +49,10 @@ public class CurrenciesServlet extends HttpServlet {
 
             checkParametersIsCorrect(code, name, sign);
             CurrencyDTO currencyDto = new CurrencyDTO(code, name, sign);
-            boolean isSavedCurrency = currencyDao.saveCurrency(currencyDto);
+            boolean isSavedCurrency = dao.save(currencyDto);
             if (isSavedCurrency) {
                 response.setStatus(HttpServletResponse.SC_CREATED);
-                Currency savedCurrency = currencyDao.findByCode(code);
+                Currency savedCurrency = dao.findByCode(code);
                 response.getWriter().write(Util.convertToJson(savedCurrency));
             }
         } catch (CurrencyExistException e) {

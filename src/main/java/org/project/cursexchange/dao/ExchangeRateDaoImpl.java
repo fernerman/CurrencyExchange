@@ -9,14 +9,14 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-public class ExchangeCurrencyDaoImpl extends BaseDao<ExchangeRate> implements ExchangeCurrencyDao {
+public class ExchangeRateDaoImpl extends BaseDao<ExchangeRate> implements ExchangeCurrencyDao {
     private final String nameExchangeCurrencyTable = "ExchangeRates";
-    private final CurrencyDao currencyDao;
+    private final Dao dao;
     private final ExchangeCurrencyMapper exchangeCurrencyMapper;
 
-    public ExchangeCurrencyDaoImpl(CurrencyDao currencyDao,
-                                   ExchangeCurrencyMapper exchangeCurrencyMapper) {
-        this.currencyDao = currencyDao;
+    public ExchangeRateDaoImpl(Dao dao,
+                               ExchangeCurrencyMapper exchangeCurrencyMapper) {
+        this.dao = dao;
         this.exchangeCurrencyMapper = exchangeCurrencyMapper;
     }
 
@@ -26,21 +26,21 @@ public class ExchangeCurrencyDaoImpl extends BaseDao<ExchangeRate> implements Ex
     }
 
     @Override
-    public Optional<ExchangeRate> findCurrencyExchangeById(Currency baseCurrency, Currency targetCurrency) throws SQLException {
+    public Optional<ExchangeRate> findById(Currency baseCurrency, Currency targetCurrency) throws SQLException {
         String[] fields = {"BaseCurrencyId", "TargetCurrencyId"};
         Object[] values = {baseCurrency.getId(), targetCurrency.getId()};
         return findByFields(fields, values, nameExchangeCurrencyTable, exchangeCurrencyMapper);
     }
 
     @Override
-    public boolean saveCurrencyExchange(ExchangeCurrencyDTO exchangeCurrencyDto) throws SQLException {
+    public boolean save(ExchangeCurrencyDTO exchangeCurrencyDto) throws SQLException {
         String[] fieldsToSave = {"BaseCurrencyId", "TargetCurrencyId", "Rate"};
         Object[] valuesToSave = new Object[]{exchangeCurrencyDto.getCurrencyBase().getId(), exchangeCurrencyDto.getCurrencyTarget().getId(), exchangeCurrencyDto.getRate()};
         return save(nameExchangeCurrencyTable, fieldsToSave, valuesToSave);
     }
 
     @Override
-    public boolean updateRateCurrencyExchange(ExchangeRate exchangeRate, String value) throws SQLException {
+    public boolean update(ExchangeRate exchangeRate, String value) throws SQLException {
         boolean isUpdate = updateField("rate", value, exchangeRate.getId(), nameExchangeCurrencyTable);
         if (isUpdate) {
             return true;
