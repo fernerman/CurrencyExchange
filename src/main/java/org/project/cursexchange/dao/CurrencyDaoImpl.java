@@ -18,6 +18,7 @@ public class CurrencyDaoImpl extends BaseDao<Currency> implements CurrencyDao {
     @Override
     public Optional<Currency> findById(int id) {
         try {
+
             return findByField("id", id, nameCurrencyTable, currencyRowMapper);
         }
         catch (SQLException e) {

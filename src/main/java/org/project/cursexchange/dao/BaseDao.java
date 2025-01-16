@@ -1,6 +1,7 @@
 package org.project.cursexchange.dao;
 
 import org.project.cursexchange.Util;
+import org.project.cursexchange.config.DatabaseConnection;
 import org.project.cursexchange.mapper.RowMapper;
 
 import java.sql.Connection;
@@ -27,7 +28,7 @@ public abstract  class BaseDao<T> {
                 " ON " + joinCondition +
                 " WHERE " + joinTable + "." + fieldName + " = ?";
 
-        try (Connection connection = Util.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setObject(1, fieldValue);
@@ -46,7 +47,7 @@ public abstract  class BaseDao<T> {
                                    String tableName,
                                    RowMapper<T> rowMapper) throws SQLException {
         String sql = "SELECT * FROM " + tableName + " WHERE " + fieldName + " = ?";
-        try (Connection connection = Util.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setObject(1, fieldValue);
             try (ResultSet resultSet = stmt.executeQuery()) {
@@ -72,7 +73,7 @@ public abstract  class BaseDao<T> {
 
         String sql = "SELECT * FROM " + tableName + " WHERE " + whereClause;
 
-        try (Connection connection = Util.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             for (int i = 0; i < fieldValues.length; i++) {
@@ -88,7 +89,7 @@ public abstract  class BaseDao<T> {
     }
     public boolean updateField(String fieldName, String fieldValue, int id, String tableName) throws SQLException {
         String sql = "UPDATE " + tableName + " SET " + fieldName + " = ? WHERE " + "id" + " = ?";
-        try (Connection connection = Util.getConnection()){
+        try (Connection connection = DatabaseConnection.getConnection()){
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setObject(1, fieldValue);
             preparedStatement.setObject(2, id);
@@ -103,7 +104,7 @@ public abstract  class BaseDao<T> {
     public List<T> findAll(String tableName, RowMapper<T> rowMapper) throws SQLException {
         List<T> entities = new ArrayList<>();
         String sql = "SELECT * FROM " + tableName;
-        try (Connection connection = Util.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement stmt = connection.prepareStatement(sql)) {
             try (ResultSet resultSet = stmt.executeQuery()) {
                 while (resultSet.next()) {
@@ -116,7 +117,7 @@ public abstract  class BaseDao<T> {
 
     public boolean save(String tableName, String[] columns, Object[] values) throws SQLException {
         String sqlRequest = "INSERT INTO " + tableName + " (" + String.join(", ", columns) + ") VALUES (" + "?, ".repeat(columns.length - 1) + "?)";
-        try (Connection connection = Util.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sqlRequest)) {
             for (int i = 0; i < values.length; i++) {
                 preparedStatement.setObject(i + 1, values[i]);
