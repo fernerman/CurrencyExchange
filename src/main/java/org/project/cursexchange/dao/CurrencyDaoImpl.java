@@ -21,9 +21,8 @@ public class CurrencyDaoImpl implements Dao<Currency> {
     private final String NAME_TABLE_CURRENCY = "Currencies";
     private final String SQL_FIND_ALL = "SELECT * FROM " + NAME_TABLE_CURRENCY;
     private final String SQL_FIND_BY_ID = "SELECT * FROM " + NAME_TABLE_CURRENCY + " WHERE id=?";
-    private final String SQL_FIND_BY_CODE = "SELECT * FROM " + NAME_TABLE_CURRENCY + " WHERE code=?";
-    private static final String SQL_SAVE = "INSERT INTO currency (code, name, sign) VALUES (?, ?, ?)";
-
+    private final String SQL_FIND_BY_CODE = "SELECT * FROM " + NAME_TABLE_CURRENCY + " WHERE Code=?";
+    private final String SQL_SAVE = "INSERT INTO" + NAME_TABLE_CURRENCY + " (Code, FullName, Sign) VALUES (?, ?, ?)";
 
     @Override
     public Optional<Currency> findById(int id) {

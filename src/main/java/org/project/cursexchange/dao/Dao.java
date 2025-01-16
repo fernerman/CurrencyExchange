@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface Dao<T> {
     Optional<T> findById(int id);
 
-    Currency findByCode(String code);
+    T findByCode(String code);
 
     List<T> findAll();
 
