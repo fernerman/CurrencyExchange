@@ -83,16 +83,23 @@ public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
         return Optional.empty();
     }
 
-
     @Override
-    public void save(ExchangeRate exchangeRate) {
+    public ExchangeRate save(ExchangeRate exchangeRate) {
 
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
-            statement.setInt(1, exchangeRate.getBaseCurrency().getId());
-            statement.setInt(2, exchangeRate.getTargetCurrency().getId());
+            statement.setLong(1, exchangeRate.getBaseCurrency().getId());
+            statement.setLong(2, exchangeRate.getTargetCurrency().getId());
             statement.setBigDecimal(3, exchangeRate.getRate());
 
             int rowsInserted = statement.executeUpdate();
+            // Получение сгенерированного идентификатора
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    exchangeRate.setId(generatedKeys.getLong(1));
+                } else {
+                    throw new SQLException("Failed to retrieve the ID.");
+                }
+            }
             if (rowsInserted == 0) {
                 throw new SQLException("Failed to insert exchange rate, no rows affected.");
             }

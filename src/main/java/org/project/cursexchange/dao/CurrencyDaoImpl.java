@@ -64,7 +64,7 @@ public class CurrencyDaoImpl implements Dao<Currency> {
     }
 
     @Override
-    public void save(Currency currency) {
+    public Currency save(Currency currency) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getName());
@@ -73,8 +73,8 @@ public class CurrencyDaoImpl implements Dao<Currency> {
             // Получение сгенерированного идентификатора
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                    long в =generatedKeys.getLong(1);
-                    currency.setId()); // Устанавливаем ID в объект
+                    currency.setId(generatedKeys.getLong(1)); // Устанавливаем ID в объект
+                    return currency;
                 } else {
                     throw new SQLException("Failed to retrieve the ID.");
                 }

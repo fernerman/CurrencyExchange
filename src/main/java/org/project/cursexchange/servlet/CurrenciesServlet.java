@@ -49,12 +49,10 @@ public class CurrenciesServlet extends HttpServlet {
             String name = request.getParameter(requestParameterName);
             String sign = request.getParameter(requestParameterSign);
             checkParametersIsCorrect(code, name, sign);
-            Currency currency = new Currency(0,code, name, sign);
-            currencyDao.save(currency);
+            Currency currency = new Currency(0, code, name, sign);
+            Currency savedCurrency = currencyDao.save(currency);
             response.setStatus(HttpServletResponse.SC_CREATED);
-            Optional<Currency> savedCurrency = currencyDao.findByCode(code);
             response.getWriter().write(JsonConverter.convertToJson(savedCurrency));
-
         } catch (CurrencyExistException e) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
