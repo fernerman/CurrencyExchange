@@ -7,6 +7,7 @@ import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.util.JsonConverter;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -33,12 +34,11 @@ public class CurrenciesServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             List<Currency> allCurrencies = currencyDao.findAll();
-
-            response.getWriter().write(Util.convertToJson(allCurrencies));
+            response.getWriter().write(JsonConverter.convertToJson(allCurrencies));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (DataAccessException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
     }
 
@@ -48,28 +48,26 @@ public class CurrenciesServlet extends HttpServlet {
             String code = request.getParameter(requestParameterCode);
             String name = request.getParameter(requestParameterName);
             String sign = request.getParameter(requestParameterSign);
-
             checkParametersIsCorrect(code, name, sign);
-            CurrencyDTO currencyDto = new CurrencyDTO(code, name, sign);
-            boolean isSavedCurrency = currencyDao.save(currencyDto);
-            if (isSavedCurrency) {
-                response.setStatus(HttpServletResponse.SC_CREATED);
-                Currency savedCurrency = currencyDao.findByCode(code);
-                response.getWriter().write(Util.convertToJson(savedCurrency));
-            }
+            Currency currency = new Currency(0,code, name, sign);
+            currencyDao.save(currency);
+            response.setStatus(HttpServletResponse.SC_CREATED);
+            Optional<Currency> savedCurrency = currencyDao.findByCode(code);
+            response.getWriter().write(JsonConverter.convertToJson(savedCurrency));
+
         } catch (CurrencyExistException e) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         } catch (DataAccessException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
     }
 
-    public boolean isDigit(String value) {
+    public boolean containsDigit(String value) {
         for (char c : value.toCharArray()) {
             if (Character.isDigit(c)) {
                 return true;
@@ -78,7 +76,7 @@ public class CurrenciesServlet extends HttpServlet {
         return false;
     }
 
-    public boolean isLatinAlphabetOnly(String input) {
+    public boolean isLatinText(String input) {
         return input != null && input.matches("^[A-Za-z]+$");
     }
 
@@ -92,7 +90,7 @@ public class CurrenciesServlet extends HttpServlet {
             throw new IllegalArgumentException("Код должен быть заглавными буквами и длиной не более " + maxLengthCode + " символов");
         } else if (name.length() > maxLengthParameters || sign.length() > maxLengthParameters) {
             throw new IllegalArgumentException("Данные не должны превышать длины " + maxLengthParameters + " символов");
-        } else if (!isLatinAlphabetOnly(code) || !isLatinAlphabetOnly(code) || isDigit(sign)) {
+        } else if (!isLatinText(code) || !isLatinText(code) || containsDigit(sign)) {
             throw new IllegalArgumentException("Данные должны содеражать буквы из английского языка и не иметь цифр.");
         }
     }

@@ -70,6 +70,15 @@ public class CurrencyDaoImpl implements Dao<Currency> {
             statement.setString(2, currency.getName());
             statement.setString(3, currency.getSign());
             statement.executeUpdate();
+            // Получение сгенерированного идентификатора
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    long в =generatedKeys.getLong(1);
+                    currency.setId()); // Устанавливаем ID в объект
+                } else {
+                    throw new SQLException("Failed to retrieve the ID.");
+                }
+            }
         } catch (SQLException ex) {
             if (ex.getMessage().contains("[SQLITE_CONSTRAINT_UNIQUE]")) {
                 throw new CurrencyExistException();
