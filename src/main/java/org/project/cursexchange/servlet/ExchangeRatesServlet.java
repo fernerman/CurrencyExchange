@@ -60,7 +60,7 @@ public class ExchangeRatesServlet extends HttpServlet {
         } catch (CurrencyNotFound | CurrencyExchangeNotFound ex) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
-        } catch (DataAccesException ex) {
+        } catch (DataAccessException ex) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(ex)));
         }

@@ -2,7 +2,7 @@ package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
 import org.project.cursexchange.exception.CurrencyNotFound;
-import org.project.cursexchange.exception.DataAccesException;
+import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 
 import org.project.cursexchange.dto.ErrorResponse;
@@ -49,7 +49,7 @@ public class ExchangeRateServlet extends HttpServlet {
         } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        } catch (DataAccesException e) {
+        } catch (DataAccessException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }
@@ -116,7 +116,7 @@ public class ExchangeRateServlet extends HttpServlet {
         } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        } catch (DataAccesException e) {
+        } catch (DataAccessException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         }

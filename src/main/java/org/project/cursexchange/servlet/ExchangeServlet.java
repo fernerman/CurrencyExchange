@@ -3,7 +3,7 @@ package org.project.cursexchange.servlet;
 import org.project.cursexchange.dto.ExchangeCalculationDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.exception.CurrencyNotFound;
-import org.project.cursexchange.exception.DataAccesException;
+import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.service.ExchangeCurrencyService;
 import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
@@ -39,7 +39,7 @@ public class ExchangeServlet extends HttpServlet {
                     amount);
             response.getWriter().write(Util.convertToJson(exchangeCalculationDTO));
             response.setStatus(HttpServletResponse.SC_OK);
-        } catch (DataAccesException e) {
+        } catch (DataAccessException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
         } catch (IllegalArgumentException e) {

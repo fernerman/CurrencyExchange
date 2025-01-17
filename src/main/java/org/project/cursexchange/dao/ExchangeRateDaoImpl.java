@@ -1,58 +1,149 @@
 package org.project.cursexchange.dao;
 
-import org.project.cursexchange.dto.ExchangeCurrencyDTO;
-import org.project.cursexchange.mapper.ExchangeCurrencyMapper;
+import org.project.cursexchange.util.DatabaseConnection;
+import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.model.ExchangeRate;
 
+import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ExchangeRateDaoImpl extends BaseDao<ExchangeRate> implements ExchangeCurrencyDao {
-    private final String nameExchangeCurrencyTable = "ExchangeRates";
-    private final Dao dao;
-    private final ExchangeCurrencyMapper exchangeCurrencyMapper;
+public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
+    private final String SQL_FIND_ALL = createBaseSelectSQlRequest();
+    private final String SQL_FIND_BY_ID = createBaseSelectSQlRequest() + "WHERE er.id = ?";
+    private final String SQL_FIND_BY_CODE = createBaseSelectSQlRequest() + "WHERE bc.code = ? OR tc.code = ?";
+    private final String SQL_SAVE = """
+            INSERT INTO ExchangeRate (BaseCurrencyId, TargetCurrencyId, Rate)
+            VALUES (?, ?, ?)
+            """;
 
-    public ExchangeRateDaoImpl(Dao dao,
-                               ExchangeCurrencyMapper exchangeCurrencyMapper) {
-        this.dao = dao;
-        this.exchangeCurrencyMapper = exchangeCurrencyMapper;
+    private String createBaseSelectSQlRequest() {
+        return """
+                SELECT er.id, er.BaseCurrencyId, er.TargetCurrencyId, er.Rate,
+                bc.id AS BaseCurrencyId, bc.code AS BaseCurrencyCode, bc.name AS BaseCurrencyName, bc.sign AS BaseCurrencySign,
+                tc.id AS TargetCurrencyId, tc.code AS TargetCurrencyCode, tc.name AS TargetCurrencyName, tc.sign AS TargetCurrencySign
+                FROM ExchangeRate er
+                JOIN Currency bc ON er.BaseCurrencyId = bc.id
+                JOIN Currency tc ON er.TargetCurrencyId = tc.id
+                """;
     }
 
     @Override
-    public List<ExchangeRate> findAllCurrencyExchange() throws SQLException {
-        return findAll(nameExchangeCurrencyTable, exchangeCurrencyMapper);
-    }
-
-    @Override
-    public Optional<ExchangeRate> findById(Currency baseCurrency, Currency targetCurrency) throws SQLException {
-        String[] fields = {"BaseCurrencyId", "TargetCurrencyId"};
-        Object[] values = {baseCurrency.getId(), targetCurrency.getId()};
-        return findByFields(fields, values, nameExchangeCurrencyTable, exchangeCurrencyMapper);
-    }
-
-    @Override
-    public boolean save(ExchangeCurrencyDTO exchangeCurrencyDto) throws SQLException {
-        String[] fieldsToSave = {"BaseCurrencyId", "TargetCurrencyId", "Rate"};
-        Object[] valuesToSave = new Object[]{exchangeCurrencyDto.getCurrencyBase().getId(), exchangeCurrencyDto.getCurrencyTarget().getId(), exchangeCurrencyDto.getRate()};
-        return save(nameExchangeCurrencyTable, fieldsToSave, valuesToSave);
-    }
-
-    @Override
-    public boolean update(ExchangeRate exchangeRate, String value) throws SQLException {
-        boolean isUpdate = updateField("rate", value, exchangeRate.getId(), nameExchangeCurrencyTable);
-        if (isUpdate) {
-            return true;
+    public List<ExchangeRate> findAll() {
+        List<ExchangeRate> exchangeRates = new ArrayList<>();
+        try (Statement statement = DatabaseConnection.getConnection().createStatement()) {
+            ResultSet resultSet = statement.executeQuery(SQL_FIND_ALL);
+            while (resultSet.next()) {
+                exchangeRates.add(mapRowToExchangeRate(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException();
         }
-        return false;
+        return exchangeRates;
     }
 
     @Override
-    public List<ExchangeRate> findCurrencyExchangeByTargetCode(String code) throws SQLException {
-        String joinCondition = nameExchangeCurrencyTable + ".TargetCurrencyId = Currencies.id";
-        return findByFieldWithJoin(nameExchangeCurrencyTable, "code", code, "Currencies", joinCondition, exchangeCurrencyMapper);
+    public Optional<ExchangeRate> findById(int id) {
+        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_ID)) {
+            statement.setInt(1, id);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.of(mapRowToExchangeRate(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+
+            throw new RuntimeException("Error finding exchange rate by ID", e);
+        }
+
+        return Optional.empty();
     }
+
+    @Override
+    public Optional<ExchangeRate> findByCode(String code) {
+
+        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_CODE)) {
+            statement.setString(1, code);
+            statement.setString(2, code);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.of(mapRowToExchangeRate(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding exchange rate by code", e);
+        }
+
+        return Optional.empty();
+    }
+
+
+    @Override
+    public void save(ExchangeRate exchangeRate) {
+
+        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
+            statement.setInt(1, exchangeRate.getBaseCurrency().getId());
+            statement.setInt(2, exchangeRate.getTargetCurrency().getId());
+            statement.setBigDecimal(3, exchangeRate.getRate());
+
+            int rowsInserted = statement.executeUpdate();
+            if (rowsInserted == 0) {
+                throw new SQLException("Failed to insert exchange rate, no rows affected.");
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error saving exchange rate", e);
+        }
+    }
+
+    private ExchangeRate mapRowToExchangeRate(ResultSet resultSet) throws SQLException {
+        int id = resultSet.getInt("id");
+        BigDecimal rate = resultSet.getBigDecimal("Rate").setScale(2, BigDecimal.ROUND_HALF_UP);
+
+        Currency baseCurrency = new Currency(
+                resultSet.getInt("BaseCurrencyId"),
+                resultSet.getString("BaseCurrencyCode"),
+                resultSet.getString("BaseCurrencyName"),
+                resultSet.getString("BaseCurrencySign")
+        );
+
+        Currency targetCurrency = new Currency(
+                resultSet.getInt("TargetCurrencyId"),
+                resultSet.getString("TargetCurrencyCode"),
+                resultSet.getString("TargetCurrencyName"),
+                resultSet.getString("TargetCurrencySign")
+        );
+
+        return new ExchangeRate(id, baseCurrency, targetCurrency, rate);
+    }
+
+
+//    @Override
+//    public boolean save(ExchangeCurrencyDTO exchangeCurrencyDto) throws SQLException {
+//        String[] fieldsToSave = {"BaseCurrencyId", "TargetCurrencyId", "Rate"};
+//        Object[] valuesToSave = new Object[]{exchangeCurrencyDto.getCurrencyBase().getId(), exchangeCurrencyDto.getCurrencyTarget().getId(), exchangeCurrencyDto.getRate()};
+//        return save(NAME_TABLE_EXCHANGE_RATE, fieldsToSave, valuesToSave);
+//    }
+//
+//    @Override
+//    public boolean update(ExchangeRate exchangeRate, String value) throws SQLException {
+//        boolean isUpdate = updateField("rate", value, exchangeRate.getId(), NAME_TABLE_EXCHANGE_RATE);
+//        if (isUpdate) {
+//            return true;
+//        }
+//        return false;
+//    }
+//
+
+//    public List<ExchangeRate> findCurrencyExchangeByTargetCode(String code) throws SQLException {
+//        String joinCondition = NAME_TABLE_EXCHANGE_RATE + ".TargetCurrencyId = Currencies.id";
+//        return findByFieldWithJoin(NAME_TABLE_EXCHANGE_RATE, "code", code, "Currencies", joinCondition, exchangeCurrencyMapper);
+//    }
 
 
 }

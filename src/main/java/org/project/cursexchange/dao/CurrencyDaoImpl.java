@@ -1,11 +1,9 @@
 package org.project.cursexchange.dao;
 
-import org.project.cursexchange.config.DatabaseConnection;
-import org.project.cursexchange.dto.CurrencyDTO;
+import org.project.cursexchange.util.DatabaseConnection;
 import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.CurrencyNotFound;
-import org.project.cursexchange.exception.DataAccesException;
-import org.project.cursexchange.mapper.CurrencyRowMapper;
+import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
 
 import java.sql.PreparedStatement;
@@ -33,21 +31,21 @@ public class CurrencyDaoImpl implements Dao<Currency> {
                 return Optional.of(mapRowToCurrency(resultSet));
             }
         } catch (SQLException e) {
-            throw new DataAccesException();
+            throw new DataAccessException();
         }
         return Optional.empty();
     }
 
     @Override
-    public Currency findByCode(String code) {
+    public Optional<Currency> findByCode(String code) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_CODE)) {
             statement.setString(1, code);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                return (mapRowToCurrency(resultSet));
+                return Optional.of((mapRowToCurrency(resultSet)));
             }
         } catch (SQLException e) {
-            throw new DataAccesException();
+            throw new DataAccessException();
         }
         throw new CurrencyNotFound();
     }
@@ -60,7 +58,7 @@ public class CurrencyDaoImpl implements Dao<Currency> {
                 currencies.add(mapRowToCurrency(resultSet));
             }
         } catch (SQLException e) {
-            throw new DataAccesException();
+            throw new DataAccessException();
         }
         return currencies;
     }
@@ -76,7 +74,7 @@ public class CurrencyDaoImpl implements Dao<Currency> {
             if (ex.getMessage().contains("[SQLITE_CONSTRAINT_UNIQUE]")) {
                 throw new CurrencyExistException();
             } else {
-                throw new DataAccesException();
+                throw new DataAccessException();
             }
         }
     }

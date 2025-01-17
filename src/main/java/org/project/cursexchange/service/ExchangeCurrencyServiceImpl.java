@@ -6,7 +6,7 @@ import org.project.cursexchange.dto.ExchangeCurrencyDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.CurrencyNotFound;
-import org.project.cursexchange.exception.DataAccesException;
+import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.model.ExchangeRate;
 
@@ -35,7 +35,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
             Currency targetCurrency = DAO.findByCode(currencyTargetCode);
             return exchangeCurrencyDao.findCurrencyExchangeById(baseCurrency, targetCurrency);
         } catch (SQLException e) {
-            throw new DataAccesException();
+            throw new DataAccessException();
         }
     }
 
@@ -55,11 +55,11 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
             }
             ExchangeCurrencyDTO exchangeCurrencyDto = buildExchangeCurrencyDTO(baseCurrencyCode, targetCurrencyCode, parseDecimal(rate));
             if (!exchangeCurrencyDao.saveCurrencyExchange(exchangeCurrencyDto)) {
-                throw new DataAccesException();
+                throw new DataAccessException();
             }
             return getExchangeCurrency(baseCurrencyCode, targetCurrencyCode).get();
         } catch (SQLException e) {
-            throw new DataAccesException();
+            throw new DataAccessException();
         }
     }
 
@@ -76,7 +76,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
             }
             throw new CurrencyExchangeNotFound();
         } catch (SQLException e) {
-            throw new DataAccesException();
+            throw new DataAccessException();
         }
     }
 
@@ -100,7 +100,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
             if (e.getMessage().contains("no such column")) {
                 throw new CurrencyExchangeNotFound("Не найдена валютная пара.");
             } else {
-                throw new DataAccesException();
+                throw new DataAccessException();
             }
         }
     }

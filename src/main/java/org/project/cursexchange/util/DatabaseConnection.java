@@ -1,4 +1,4 @@
-package org.project.cursexchange.config;
+package org.project.cursexchange.util;
 
 import java.net.URISyntaxException;
 import java.net.URL;
