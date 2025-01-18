@@ -15,25 +15,39 @@ import java.util.List;
 import java.util.Optional;
 
 public class ExchangeRateDao {
-    private final String SQL_FIND_ALL = createBaseSelectSQlRequest();
-    private final String SQL_FIND_BY_ID = createBaseSelectSQlRequest() + "WHERE er.id = ?";
-    private final String SQL_FIND_BY_CODE = createBaseSelectSQlRequest() + "WHERE bc.code = ? OR tc.code = ?";
-    private final String SQL_SAVE = """
-            INSERT INTO ExchangeRate (BaseCurrencyId, TargetCurrencyId, Rate)
-            VALUES (?, ?, ?)
+    private final static String SQL_FIND_ALL = """
+            SELECT er.id, er.BaseCurrencyId, er.TargetCurrencyId, er.Rate,
+            bc.id AS BaseCurrencyId, bc.code AS BaseCurrencyCode, bc.name AS BaseCurrencyName, bc.sign AS BaseCurrencySign,
+            tc.id AS TargetCurrencyId, tc.code AS TargetCurrencyCode, tc.name AS TargetCurrencyName, tc.sign AS TargetCurrencySign
+            FROM ExchangeRate er
+            JOIN Currency bc ON er.BaseCurrencyId = bc.id
+            JOIN Currency tc ON er.TargetCurrencyId = tc.id
             """;
 
-    private String createBaseSelectSQlRequest() {
-        return """
-                SELECT er.id, er.BaseCurrencyId, er.TargetCurrencyId, er.Rate,
-                bc.id AS BaseCurrencyId, bc.code AS BaseCurrencyCode, bc.name AS BaseCurrencyName, bc.sign AS BaseCurrencySign,
-                tc.id AS TargetCurrencyId, tc.code AS TargetCurrencyCode, tc.name AS TargetCurrencyName, tc.sign AS TargetCurrencySign
-                FROM ExchangeRate er
-                JOIN Currency bc ON er.BaseCurrencyId = bc.id
-                JOIN Currency tc ON er.TargetCurrencyId = tc.id
-                """;
-    }
+    private final String SQL_FIND_BY_ID = """
+            SELECT er.id, er.BaseCurrencyId, er.TargetCurrencyId, er.Rate,
+            bc.id AS BaseCurrencyId, bc.code AS BaseCurrencyCode, bc.name AS BaseCurrencyName, bc.sign AS BaseCurrencySign,
+            tc.id AS TargetCurrencyId, tc.code AS TargetCurrencyCode, tc.name AS TargetCurrencyName, tc.sign AS TargetCurrencySign
+            FROM ExchangeRate er
+            JOIN Currency bc ON er.BaseCurrencyId = bc.id
+            JOIN Currency tc ON er.TargetCurrencyId = tc.id
+            WHERE er.id = ?
+            """;
 
+    private final String SQL_FIND_BY_CODE = """
+              SELECT er.id, er.BaseCurrencyId, er.TargetCurrencyId, er.Rate,
+                             bc.id AS BaseCurrencyId, bc.code AS BaseCurrencyCode, bc.name AS BaseCurrencyName, bc.sign AS BaseCurrencySign,
+                             tc.id AS TargetCurrencyId, tc.code AS TargetCurrencyCode, tc.name AS TargetCurrencyName, tc.sign AS TargetCurrencySign
+                             FROM ExchangeRate er
+                             JOIN Currency bc ON er.BaseCurrencyId = bc.id
+                             JOIN Currency tc ON er.TargetCurrencyId = tc.id
+                             WHERE bc.code = ? OR tc.code = ?";
+            """;
+    private final String SQL_SAVE =
+            """
+                    INSERT INTO ExchangeRate (BaseCurrencyId, TargetCurrencyId, Rate)
+                    VALUES (?, ?, ?)
+                    """;
 
     public List<ExchangeRate> findAll() {
         List<ExchangeRate> exchangeRates = new ArrayList<>();
