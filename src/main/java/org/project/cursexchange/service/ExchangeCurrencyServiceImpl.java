@@ -24,23 +24,6 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
 
 
     @Override
-    public ExchangeRate updateExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) {
-        try {
-            String rateChecked = parseDecimal(rate).toString();
-            Optional<ExchangeRate> exchangeCurrencyOptional = findByCodes(baseCurrencyCode, targetCurrencyCode);
-            if (exchangeCurrencyOptional.isPresent()) {
-                ExchangeRate exchangeRate = exchangeCurrencyOptional.get();
-                if (exchangeCurrencyDao.updateRateCurrencyExchange(exchangeRate, rateChecked)) {
-                    return findByCodes(baseCurrencyCode, targetCurrencyCode).get();
-                }
-            }
-            throw new CurrencyExchangeNotFound();
-        } catch (SQLException e) {
-            throw new DataAccessException();
-        }
-    }
-
-    @Override
     public ExchangeCalculationDTO getExchangeCurrencyWithConvertedAmount(String baseCurrencyCode, String targetCurrencyCode, String amount) {
         try {
             BigDecimal amountByDigit = parseDecimal(amount);

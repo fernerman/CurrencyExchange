@@ -1,6 +1,7 @@
 package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.dao.ExchangeRateDao;
+import org.project.cursexchange.dto.SaveExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
@@ -18,6 +19,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static org.project.cursexchange.service.CurrencyValidationService.MAX_LENGTH_CODE;
@@ -70,8 +72,10 @@ public class ExchangeRateServlet extends HttpServlet {
             String correctPath = getCodesFromPath(pathInfo);
             String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = correctPath.substring(MAX_LENGTH_CODE);
-            ExchangeRate updateExchangeRate = exchangeCurrencyService.updateExchangeCurrency(baseCode, targetCode, rateFromUser);
-            response.getWriter().write(JsonConverter.convertToJson(updateExchangeRate));
+            BigDecimal rateByDigit=exchangeRateValidationService.getDecimal(rateFromUser);
+            SaveExchangeRateDTO saveExchangeRateDTO= new SaveExchangeRateDTO(baseCode,targetCode,rateByDigit);
+            long id = exchangeRateDao.update(saveExchangeRateDTO);
+            response.getWriter().write(JsonConverter.convertToJson(exchangeRateDao.findById((int)id).get()));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -84,8 +88,6 @@ public class ExchangeRateServlet extends HttpServlet {
             response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
     }
-
-
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Проверяем метод запроса

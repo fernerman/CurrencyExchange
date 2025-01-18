@@ -1,11 +1,9 @@
 package org.project.cursexchange.service;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class ExchangeRateValidationService {
-
-    public BigDecimal getRate(String rate) {
+    public BigDecimal getDecimal(String rate) {
         try {
             var digit = new BigDecimal(rate);
             if (digit.compareTo(BigDecimal.ZERO) >= 0) {
