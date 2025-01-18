@@ -1,9 +1,9 @@
 package org.project.cursexchange.service;
 
+import org.project.cursexchange.dao.ExchangeRateDao;
 import org.project.cursexchange.dto.ExchangeCalculationDTO;
-import org.project.cursexchange.dto.ExchangeCurrencyDTO;
+import org.project.cursexchange.dto.SaveExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
-import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
@@ -16,51 +16,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
+    private final ExchangeRateDao exchangeRateDao;
 
-    private final ExchangeCurrencyDao exchangeCurrencyDao;
-    private final Dao DAO;
-
-    public ExchangeCurrencyServiceImpl() {
-        this.exchangeCurrencyDao = DependencyFactory.createExchangeCurrencyDao();
-
-        this.DAO = DependencyFactory.createCurrencyDao();
-
+    public ExchangeCurrencyServiceImpl(ExchangeRate exchangeRate) {
+        exchangeRateDao = new ExchangeRateDao();
     }
 
-    @Override
-    public Optional<ExchangeRate> findByCodes(String currencyBaseCode, String currencyTargetCode) {
-        try {
-            Currency baseCurrency = DAO.findByCode(currencyBaseCode);
-            Currency targetCurrency = DAO.findByCode(currencyTargetCode);
-            return exchangeCurrencyDao.findCurrencyExchangeById(baseCurrency, targetCurrency);
-        } catch (SQLException e) {
-            throw new DataAccessException();
-        }
-    }
-
-    @Override
-    public ExchangeRate addExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) {
-        try {
-            if (baseCurrencyCode == null || targetCurrencyCode == null || rate == null || baseCurrencyCode.isBlank() || targetCurrencyCode.isBlank() || rate.isBlank()) {
-                throw new IllegalArgumentException("Данные не могут быть пустыми.");
-            }
-
-            if (baseCurrencyCode.equals(targetCurrencyCode)) {
-                throw new CurrencyExistException("Невозможно добавить обмен валютами");
-            }
-            Optional<ExchangeRate> exchangeCurrencyOptional = findByCodes(baseCurrencyCode, targetCurrencyCode);
-            if (exchangeCurrencyOptional.isPresent()) {
-                throw new CurrencyExistException("Валютная пара уже существует");
-            }
-            ExchangeCurrencyDTO exchangeCurrencyDto = buildExchangeCurrencyDTO(baseCurrencyCode, targetCurrencyCode, parseDecimal(rate));
-            if (!exchangeCurrencyDao.saveCurrencyExchange(exchangeCurrencyDto)) {
-                throw new DataAccessException();
-            }
-            return findByCodes(baseCurrencyCode, targetCurrencyCode).get();
-        } catch (SQLException e) {
-            throw new DataAccessException();
-        }
-    }
 
     @Override
     public ExchangeRate updateExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) {
@@ -153,10 +114,6 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
 
     private ExchangeCalculationDTO buildExchangeCalculationDTO(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
         return new ExchangeCalculationDTO(DAO.findByCode(baseCurrencyCode), DAO.findByCode(targetCurrencyCode), rate, amount, convertedAmount.setScale(2, RoundingMode.HALF_UP));
-    }
-
-    private ExchangeCurrencyDTO buildExchangeCurrencyDTO(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate) {
-        return new ExchangeCurrencyDTO(DAO.findByCode(baseCurrencyCode), DAO.findByCode(targetCurrencyCode), rate);
     }
 
 }

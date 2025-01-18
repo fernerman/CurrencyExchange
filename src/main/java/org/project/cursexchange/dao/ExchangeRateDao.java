@@ -1,5 +1,7 @@
 package org.project.cursexchange.dao;
 
+import org.project.cursexchange.dto.SaveExchangeRateDTO;
+import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.util.DatabaseConnection;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
@@ -47,6 +49,7 @@ public class ExchangeRateDao {
             """
                     INSERT INTO ExchangeRate (BaseCurrencyId, TargetCurrencyId, Rate)
                     VALUES (?, ?, ?)
+                    RETURNING id
                     """;
 
     public List<ExchangeRate> findAll() {
@@ -102,29 +105,29 @@ public class ExchangeRateDao {
     }
 
 
-    public ExchangeRate save(ExchangeRate exchangeRate) {
+    public long save(SaveExchangeRateDTO exchangeRateDTO) {
 
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
-            statement.setLong(1, exchangeRate.getBaseCurrency().getId());
-            statement.setLong(2, exchangeRate.getTargetCurrency().getId());
-            statement.setBigDecimal(3, exchangeRate.getRate());
+            statement.setString(1, exchangeRateDTO.getBaseCurrencyCode());
+            statement.setString(2, exchangeRateDTO.getBaseCurrencyCode());
+            statement.setBigDecimal(3, exchangeRateDTO.getRate());
 
-            int rowsInserted = statement.executeUpdate();
+            statement.executeUpdate();
             // Получение сгенерированного идентификатора
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                    exchangeRate.setId(generatedKeys.getLong(1));
+                    return generatedKeys.getLong(1);
                 } else {
                     throw new SQLException("Failed to retrieve the ID.");
                 }
             }
-            if (rowsInserted == 0) {
-                throw new SQLException("Failed to insert exchange rate, no rows affected.");
+        } catch (SQLException ex) {
+            if (ex.getMessage().contains("[SQLITE_CONSTRAINT_UNIQUE]")) {
+                throw new CurrencyExistException();
+            } else {
+                throw new DataAccessException();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException("Error saving exchange rate", e);
         }
-        return exchangeRate;
     }
 
     private ExchangeRate mapRowToExchangeRate(ResultSet resultSet) throws SQLException {

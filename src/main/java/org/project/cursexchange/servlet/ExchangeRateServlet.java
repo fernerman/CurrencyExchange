@@ -9,7 +9,7 @@ import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.model.ExchangeRate;
 import org.project.cursexchange.service.ExchangeCurrencyService;
-import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
+import org.project.cursexchange.service.ExchangeRateValidationService;
 import org.project.cursexchange.util.JsonConverter;
 
 import javax.servlet.ServletException;
@@ -18,36 +18,37 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.Optional;
+
+import static org.project.cursexchange.service.CurrencyValidationService.MAX_LENGTH_CODE;
 
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateServlet extends HttpServlet {
 
     private ExchangeCurrencyService exchangeCurrencyService;
     private ExchangeRateDao exchangeRateDao;
+    private ExchangeRateValidationService exchangeRateValidationService;
     private final int MAX_LENGTH_CODE = 3;
+    private final String rateParameter = "rate";
 
     @Override
     public void init() throws ServletException {
-        exchangeCurrencyService = new ExchangeCurrencyServiceImpl();
-        exchangeRateDao=new ExchangeRateDao();
+        exchangeRateValidationService = new ExchangeRateValidationService();
+        exchangeRateDao = new ExchangeRateDao();
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
         try {
             String pathInfo = req.getPathInfo();
-            String codesInPath = validateCodesInPath(pathInfo);
+            String codesInPath = getCodesFromPath(pathInfo);
             String baseCode = codesInPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = codesInPath.substring(MAX_LENGTH_CODE);
-            Optional<ExchangeRate> exchangeRate=exchangeRateDao.findByCodes(baseCode,targetCode);
-
+            Optional<ExchangeRate> exchangeRate = exchangeRateDao.findByCodes(baseCode, targetCode);
             if (exchangeRate.isPresent()) {
                 response.getWriter().write(JsonConverter.convertToJson(exchangeRate));
                 response.setStatus(HttpServletResponse.SC_OK);
-            }
-            else {
+            } else {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (CurrencyCodeNotFoundInPath e) {
@@ -60,19 +61,15 @@ public class ExchangeRateServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
-
-
     }
 
     public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            String rateFromUser = getRateFromForm(request);
+            String rateFromUser = request.getParameter(rateParameter);
             String pathInfo = request.getPathInfo();
-            String correctPath = validateCodesInPath(pathInfo);
-
+            String correctPath = getCodesFromPath(pathInfo);
             String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = correctPath.substring(MAX_LENGTH_CODE);
-
             ExchangeRate updateExchangeRate = exchangeCurrencyService.updateExchangeCurrency(baseCode, targetCode, rateFromUser);
             response.getWriter().write(JsonConverter.convertToJson(updateExchangeRate));
             response.setStatus(HttpServletResponse.SC_OK);
@@ -99,45 +96,16 @@ public class ExchangeRateServlet extends HttpServlet {
         }
     }
 
-    private String validateCodesInPath(String path) {
+    private String getCodesFromPath(String path) {
         if (path == null || path.isBlank() || !path.startsWith("/") || path.trim().equals("/")) {
             throw new CurrencyCodeNotFoundInPath();
         }
         path = path.trim();
         int maxLengthCodeTwoCodes = MAX_LENGTH_CODE * 2;
-        String regex = String.format("^/([A-Za-z]{%d})$", maxLengthCodeTwoCodes);
+        String regex = String.format("^/([A-Z]{%d})$", maxLengthCodeTwoCodes);
         if (path.matches(regex)) {
             return path.substring(1);
         }
-
         throw new CurrencyCodeNotFoundInPath();
     }
-
-    private boolean isValidRate(String rate) {
-        try {
-            new BigDecimal(rate);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-
-    private String getRateFromForm(HttpServletRequest request) throws IOException {
-        StringBuilder sb = new StringBuilder();
-        String line;
-        // Чтение всех строк запроса
-        while ((line = request.getReader().readLine()) != null) {
-            sb.append(line);
-        }
-
-        String rate = sb.toString();
-        if (isValidRate(rate)) {
-            return rate;
-        } else {
-            throw new IllegalArgumentException("Invalid rate value: " + rate);
-        }
-    }
-
-
 }
