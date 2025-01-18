@@ -6,7 +6,7 @@ import org.project.cursexchange.model.ExchangeRate;
 import java.util.Optional;
 
 public interface ExchangeCurrencyService {
-    Optional<ExchangeRate> getExchangeCurrency(String currencyBaseCode, String currencyTargetCode);
+    Optional<ExchangeRate> findByCodes(String currencyBaseCode, String currencyTargetCode);
 
     ExchangeRate addExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate);
 

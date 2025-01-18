@@ -1,8 +1,7 @@
 package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.util.JsonConverter;
-import org.project.cursexchange.dao.Dao;
-import org.project.cursexchange.dao.CurrencyDaoImpl;
+import org.project.cursexchange.dao.CurrencyDao;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.CurrencyNotValidCodeException;
 import org.project.cursexchange.exception.DataAccessException;
@@ -20,12 +19,12 @@ import java.util.Optional;
 
 @WebServlet("/currency/*")
 public class CurrencyServlet extends HttpServlet {
-    private Dao<Currency> dao;
-    private final int MAX_LENGTH_CODE = 3;
+    private CurrencyDao currencyDao;
+    private final static int MAX_LENGTH_CODE = 3;
 
     @Override
     public void init() throws ServletException {
-        dao = new CurrencyDaoImpl();
+        currencyDao = new CurrencyDao();
     }
 
     @Override
@@ -33,7 +32,7 @@ public class CurrencyServlet extends HttpServlet {
         try {
             String path = req.getPathInfo();
             String code = getValidCode(path);
-            Optional<Currency> currencyFoundByCode = dao.findByCode(code);
+            Optional<Currency> currencyFoundByCode = currencyDao.findByCode(code);
             if (currencyFoundByCode.isPresent()) {
                 response.setStatus(HttpServletResponse.SC_OK);
             } else {

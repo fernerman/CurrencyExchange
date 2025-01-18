@@ -65,12 +65,11 @@ public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
         return Optional.empty();
     }
 
-    @Override
-    public Optional<ExchangeRate> findByCode(String code) {
 
+    public Optional<ExchangeRate> findByCodes(String base, String target) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_CODE)) {
-            statement.setString(1, code);
-            statement.setString(2, code);
+            statement.setString(1, base);
+            statement.setString(2, target);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
                     return Optional.of(mapRowToExchangeRate(resultSet));
@@ -81,6 +80,11 @@ public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<ExchangeRate> findByCode(String code) {
+        return findByCodes(code, code);
     }
 
     @Override
@@ -106,6 +110,7 @@ public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
         } catch (SQLException e) {
             throw new RuntimeException("Error saving exchange rate", e);
         }
+        return exchangeRate;
     }
 
     private ExchangeRate mapRowToExchangeRate(ResultSet resultSet) throws SQLException {

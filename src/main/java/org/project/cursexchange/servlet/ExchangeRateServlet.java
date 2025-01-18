@@ -1,5 +1,6 @@
 package org.project.cursexchange.servlet;
 
+import org.project.cursexchange.dao.ExchangeRateDaoImpl;
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
@@ -9,6 +10,7 @@ import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.model.ExchangeRate;
 import org.project.cursexchange.service.ExchangeCurrencyService;
 import org.project.cursexchange.service.ExchangeCurrencyServiceImpl;
+import org.project.cursexchange.util.JsonConverter;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -23,11 +25,13 @@ import java.util.Optional;
 public class ExchangeRateServlet extends HttpServlet {
 
     private ExchangeCurrencyService exchangeCurrencyService;
+    private ExchangeRateDaoImpl exchangeRateDao;
     private final int MAX_LENGTH_CODE = 3;
 
     @Override
     public void init() throws ServletException {
         exchangeCurrencyService = new ExchangeCurrencyServiceImpl();
+        exchangeRateDao=new ExchangeRateDaoImpl();
     }
 
     @Override
@@ -37,24 +41,62 @@ public class ExchangeRateServlet extends HttpServlet {
             String codesInPath = validateCodesInPath(pathInfo);
             String baseCode = codesInPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = codesInPath.substring(MAX_LENGTH_CODE);
+            Optional<ExchangeRate> exchangeRate=exchangeRateDao.findByCodes(baseCode,targetCode);
 
-            Optional<ExchangeRate> exchangeCurrency = exchangeCurrencyService.getExchangeCurrency(baseCode, targetCode);
-            if (exchangeCurrency.isPresent()) {
-                response.getWriter().write(Util.convertToJson(exchangeCurrency));
+            if (exchangeRate.isPresent()) {
+                response.getWriter().write(JsonConverter.convertToJson(exchangeRate));
                 response.setStatus(HttpServletResponse.SC_OK);
+            }
+            else {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (CurrencyCodeNotFoundInPath e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         } catch (DataAccessException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
 
 
+    }
+
+    public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        try {
+            String rateFromUser = getRateFromForm(request);
+            String pathInfo = request.getPathInfo();
+            String correctPath = validateCodesInPath(pathInfo);
+
+            String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
+            String targetCode = correctPath.substring(MAX_LENGTH_CODE);
+
+            ExchangeRate updateExchangeRate = exchangeCurrencyService.updateExchangeCurrency(baseCode, targetCode, rateFromUser);
+            response.getWriter().write(JsonConverter.convertToJson(updateExchangeRate));
+            response.setStatus(HttpServletResponse.SC_OK);
+        } catch (IllegalArgumentException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
+        } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
+        } catch (DataAccessException e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
+        }
+    }
+
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // Проверяем метод запроса
+        if ("PATCH".equalsIgnoreCase(req.getMethod())) {
+            doPatch(req, resp);
+        } else {
+            super.service(req, resp);
+        }
     }
 
     private String validateCodesInPath(String path) {
@@ -98,38 +140,4 @@ public class ExchangeRateServlet extends HttpServlet {
     }
 
 
-    public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            String rateFromUser = getRateFromForm(request);
-            String pathInfo = request.getPathInfo();
-            String correctPath = validateCodesInPath(pathInfo);
-
-            String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
-            String targetCode = correctPath.substring(MAX_LENGTH_CODE);
-
-            ExchangeRate updateExchangeRate = exchangeCurrencyService.updateExchangeCurrency(baseCode, targetCode, rateFromUser);
-            response.getWriter().write(Util.convertToJson(updateExchangeRate));
-            response.setStatus(HttpServletResponse.SC_OK);
-        } catch (IllegalArgumentException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        } catch (DataAccessException e) {
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
-        }
-    }
-
-
-    @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Проверяем метод запроса
-        if ("PATCH".equalsIgnoreCase(req.getMethod())) {
-            doPatch(req, resp);
-        } else {
-            super.service(req, resp);
-        }
-    }
 }

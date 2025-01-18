@@ -1,5 +1,6 @@
 package org.project.cursexchange.dao;
 
+import org.project.cursexchange.dto.SaveCurrencyDTO;
 import org.project.cursexchange.util.DatabaseConnection;
 import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.CurrencyNotFound;
@@ -14,15 +15,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CurrencyDaoImpl implements Dao<Currency> {
+public class CurrencyDao {
 
-    private final String NAME_TABLE_CURRENCY = "Currencies";
-    private final String SQL_FIND_ALL = "SELECT * FROM " + NAME_TABLE_CURRENCY;
-    private final String SQL_FIND_BY_ID = "SELECT * FROM " + NAME_TABLE_CURRENCY + " WHERE id=?";
-    private final String SQL_FIND_BY_CODE = "SELECT * FROM " + NAME_TABLE_CURRENCY + " WHERE Code=?";
-    private final String SQL_SAVE = "INSERT INTO" + NAME_TABLE_CURRENCY + " (Code, FullName, Sign) VALUES (?, ?, ?)";
 
-    @Override
+    private static final String SQL_FIND_ALL = "SELECT * FROM Currencies";
+    private static final String SQL_FIND_BY_ID = "SELECT * FROM Currencies WHERE id=?";
+    private static final String SQL_FIND_BY_CODE = "SELECT * FROM Currencies WHERE Code=?";
+    private static final String SQL_SAVE = "INSERT INTO Currencies (Code, FullName, Sign) VALUES (?, ?, ?) RETURNING id";
+
     public Optional<Currency> findById(int id) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_ID)) {
             statement.setInt(1, id);
@@ -36,7 +36,7 @@ public class CurrencyDaoImpl implements Dao<Currency> {
         return Optional.empty();
     }
 
-    @Override
+
     public Optional<Currency> findByCode(String code) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_CODE)) {
             statement.setString(1, code);
@@ -63,8 +63,8 @@ public class CurrencyDaoImpl implements Dao<Currency> {
         return currencies;
     }
 
-    @Override
-    public Currency save(Currency currency) {
+
+    public long save(SaveCurrencyDTO currency) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getName());
@@ -73,8 +73,7 @@ public class CurrencyDaoImpl implements Dao<Currency> {
             // Получение сгенерированного идентификатора
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                    currency.setId(generatedKeys.getLong(1)); // Устанавливаем ID в объект
-                    return currency;
+                    return generatedKeys.getLong(1);
                 } else {
                     throw new SQLException("Failed to retrieve the ID.");
                 }

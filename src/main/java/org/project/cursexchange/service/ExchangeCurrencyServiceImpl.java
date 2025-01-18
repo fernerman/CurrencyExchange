@@ -29,7 +29,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
     }
 
     @Override
-    public Optional<ExchangeRate> getExchangeCurrency(String currencyBaseCode, String currencyTargetCode) {
+    public Optional<ExchangeRate> findByCodes(String currencyBaseCode, String currencyTargetCode) {
         try {
             Currency baseCurrency = DAO.findByCode(currencyBaseCode);
             Currency targetCurrency = DAO.findByCode(currencyTargetCode);
@@ -49,7 +49,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
             if (baseCurrencyCode.equals(targetCurrencyCode)) {
                 throw new CurrencyExistException("Невозможно добавить обмен валютами");
             }
-            Optional<ExchangeRate> exchangeCurrencyOptional = getExchangeCurrency(baseCurrencyCode, targetCurrencyCode);
+            Optional<ExchangeRate> exchangeCurrencyOptional = findByCodes(baseCurrencyCode, targetCurrencyCode);
             if (exchangeCurrencyOptional.isPresent()) {
                 throw new CurrencyExistException("Валютная пара уже существует");
             }
@@ -57,7 +57,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
             if (!exchangeCurrencyDao.saveCurrencyExchange(exchangeCurrencyDto)) {
                 throw new DataAccessException();
             }
-            return getExchangeCurrency(baseCurrencyCode, targetCurrencyCode).get();
+            return findByCodes(baseCurrencyCode, targetCurrencyCode).get();
         } catch (SQLException e) {
             throw new DataAccessException();
         }
@@ -67,11 +67,11 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
     public ExchangeRate updateExchangeCurrency(String baseCurrencyCode, String targetCurrencyCode, String rate) {
         try {
             String rateChecked = parseDecimal(rate).toString();
-            Optional<ExchangeRate> exchangeCurrencyOptional = getExchangeCurrency(baseCurrencyCode, targetCurrencyCode);
+            Optional<ExchangeRate> exchangeCurrencyOptional = findByCodes(baseCurrencyCode, targetCurrencyCode);
             if (exchangeCurrencyOptional.isPresent()) {
                 ExchangeRate exchangeRate = exchangeCurrencyOptional.get();
                 if (exchangeCurrencyDao.updateRateCurrencyExchange(exchangeRate, rateChecked)) {
-                    return getExchangeCurrency(baseCurrencyCode, targetCurrencyCode).get();
+                    return findByCodes(baseCurrencyCode, targetCurrencyCode).get();
                 }
             }
             throw new CurrencyExchangeNotFound();
@@ -148,7 +148,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
     }
 
     private BigDecimal getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
-        Optional<ExchangeRate> exchangeCurrency = getExchangeCurrency(baseCurrencyCode, targetCurrencyCode);
+        Optional<ExchangeRate> exchangeCurrency = findByCodes(baseCurrencyCode, targetCurrencyCode);
         return exchangeCurrency.map(ExchangeRate::getRate).orElse(null);
     }
 
