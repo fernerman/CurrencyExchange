@@ -5,7 +5,7 @@ import java.math.RoundingMode;
 
 public class ExchangeRateValidationService {
 
-    public BigDecimal getBigDecimal(String rate) {
+    public BigDecimal getRate(String rate) {
         try {
             var digit = new BigDecimal(rate);
             if (digit.compareTo(BigDecimal.ZERO) >= 0) {

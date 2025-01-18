@@ -51,7 +51,7 @@ public class ExchangeRatesServlet extends HttpServlet {
             String baseCurrencyCode = request.getParameter(baseCurrencyCodeParameter);
             String targetCurrencyCode = request.getParameter(targetCurrencyCodeParameter);
             String rate = request.getParameter(rateParameter);
-            BigDecimal rateByDecimal=exchangeRateValidationService.getBigDecimal(rate);
+            BigDecimal rateByDecimal=exchangeRateValidationService.getRate(rate);
             SaveExchangeRateDTO saveExchangeRateDTO=new SaveExchangeRateDTO(baseCurrencyCode, targetCurrencyCode, rateByDecimal);
             long id=exchangeRateDao.save(saveExchangeRateDTO);
             response.getWriter().write(JsonConverter.convertToJson(exchangeRateDao.findById((int)id).get()));
