@@ -1,6 +1,6 @@
 package org.project.cursexchange.servlet;
 
-import org.project.cursexchange.dao.ExchangeRateDaoImpl;
+import org.project.cursexchange.dao.ExchangeRateDao;
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
@@ -25,13 +25,13 @@ import java.util.Optional;
 public class ExchangeRateServlet extends HttpServlet {
 
     private ExchangeCurrencyService exchangeCurrencyService;
-    private ExchangeRateDaoImpl exchangeRateDao;
+    private ExchangeRateDao exchangeRateDao;
     private final int MAX_LENGTH_CODE = 3;
 
     @Override
     public void init() throws ServletException {
         exchangeCurrencyService = new ExchangeCurrencyServiceImpl();
-        exchangeRateDao=new ExchangeRateDaoImpl();
+        exchangeRateDao=new ExchangeRateDao();
     }
 
     @Override

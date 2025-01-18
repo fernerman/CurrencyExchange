@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
+public class ExchangeRateDao {
     private final String SQL_FIND_ALL = createBaseSelectSQlRequest();
     private final String SQL_FIND_BY_ID = createBaseSelectSQlRequest() + "WHERE er.id = ?";
     private final String SQL_FIND_BY_CODE = createBaseSelectSQlRequest() + "WHERE bc.code = ? OR tc.code = ?";
@@ -34,7 +34,7 @@ public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
                 """;
     }
 
-    @Override
+
     public List<ExchangeRate> findAll() {
         List<ExchangeRate> exchangeRates = new ArrayList<>();
         try (Statement statement = DatabaseConnection.getConnection().createStatement()) {
@@ -48,7 +48,7 @@ public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
         return exchangeRates;
     }
 
-    @Override
+
     public Optional<ExchangeRate> findById(int id) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_ID)) {
             statement.setInt(1, id);
@@ -82,12 +82,12 @@ public class ExchangeRateDaoImpl implements Dao<ExchangeRate> {
         return Optional.empty();
     }
 
-    @Override
+
     public Optional<ExchangeRate> findByCode(String code) {
         return findByCodes(code, code);
     }
 
-    @Override
+
     public ExchangeRate save(ExchangeRate exchangeRate) {
 
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {

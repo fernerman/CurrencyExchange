@@ -1,6 +1,5 @@
 package org.project.cursexchange.service;
 
-import org.project.cursexchange.dao.Dao;
 import org.project.cursexchange.dto.ExchangeCalculationDTO;
 import org.project.cursexchange.dto.ExchangeCurrencyDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
