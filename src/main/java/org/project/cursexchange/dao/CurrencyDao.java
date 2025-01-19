@@ -88,6 +88,9 @@ public class CurrencyDao {
     }
 
     private Currency mapRowToCurrency(ResultSet resultSet) throws SQLException {
-        return new Currency(resultSet.getInt("id"), resultSet.getString("Code"), resultSet.getString("FullName"), resultSet.getString("Sign"));
+        return new Currency(resultSet.getInt("id"),
+                resultSet.getString("Code"),
+                resultSet.getString("FullName"),
+                resultSet.getString("Sign"));
     }
 }

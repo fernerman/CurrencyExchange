@@ -19,16 +19,25 @@ import java.util.Optional;
 
 public class ExchangeRateDao {
     private final static String SQL_FIND_ALL = """
-            SELECT er.id, er.BaseCurrencyId, er.TargetCurrencyId, er.Rate,
-            bc.id AS BaseCurrencyId, bc.code AS BaseCurrencyCode, bc.name AS BaseCurrencyName, bc.sign AS BaseCurrencySign,
-            tc.id AS TargetCurrencyId, tc.code AS TargetCurrencyCode, tc.name AS TargetCurrencyName, tc.sign AS TargetCurrencySign
+            SELECT er.id,
+            er.Rate,
+            er.BaseCurrencyId,
+            er.TargetCurrencyId,
+            bc.id AS BaseCurrencyId,
+            bc.code AS BaseCurrencyCode,
+            bc.name AS BaseCurrencyName,
+            bc.sign AS BaseCurrencySign,
+            tc.id AS TargetCurrencyId,
+            tc.code AS TargetCurrencyCode,
+            tc.name AS TargetCurrencyName,
+            tc.sign AS TargetCurrencySign
             FROM ExchangeRate er
             JOIN Currency bc ON er.BaseCurrencyId = bc.id
             JOIN Currency tc ON er.TargetCurrencyId = tc.id
             """;
 
     private final String SQL_FIND_BY_ID = """
-            SELECT er.id, er.BaseCurrencyId, er.TargetCurrencyId, er.Rate,
+            SELECT er.id, er.Rate,er.BaseCurrencyId, er.TargetCurrencyId,
             bc.id AS BaseCurrencyId, bc.code AS BaseCurrencyCode, bc.name AS BaseCurrencyName, bc.sign AS BaseCurrencySign,
             tc.id AS TargetCurrencyId, tc.code AS TargetCurrencyCode, tc.name AS TargetCurrencyName, tc.sign AS TargetCurrencySign
             FROM ExchangeRate er
@@ -38,7 +47,7 @@ public class ExchangeRateDao {
             """;
 
     private final String SQL_FIND_BY_CODE = """
-             SELECT er.id, er.BaseCurrencyId, er.TargetCurrencyId, er.Rate,
+             SELECT er.id, er.Rate,er.BaseCurrencyId, er.TargetCurrencyId, 
              bc.id AS BaseCurrencyId, bc.code AS BaseCurrencyCode, bc.name AS BaseCurrencyName, bc.sign AS BaseCurrencySign,
              tc.id AS TargetCurrencyId, tc.code AS TargetCurrencyCode, tc.name AS TargetCurrencyName, tc.sign AS TargetCurrencySign
              FROM ExchangeRate er
@@ -47,19 +56,78 @@ public class ExchangeRateDao {
              WHERE bc.code = ? OR tc.code = ?";
             """;
     private final String SQL_SAVE = """
-                INSERT INTO ExchangeRate (BaseCurrencyId, TargetCurrencyId, Rate)
-                VALUES (
-                    (SELECT id FROM Currency WHERE code = ?),
-                    (SELECT id FROM Currency WHERE code = ?),
-                    ?
-                )
+            WITH inserted AS (
+            INSERT INTO ExchangeRate (BaseCurrencyId, TargetCurrencyId, Rate)
+            SELECT 
+            bc.id AS BaseCurrencyId,
+            tc.id AS TargetCurrencyId,
+            ? AS Rate
+            FROM Currency bc
+            JOIN Currency tc ON tc.code = ?
+            WHERE bc.code = ?
+            RETURNING id, BaseCurrencyId, TargetCurrencyId, Rate)
+                SELECT 
+                inserted.id AS ExchangeRateId,
+                inserted.Rate AS ExchangeRateRate,
+                bc.id AS BaseCurrencyId,
+                bc.code AS BaseCurrencyCode,
+                bc.name AS BaseCurrencyName,
+                bc.sign AS BaseCurrencySign,
+                tc.id AS TargetCurrencyId,
+                tc.code AS TargetCurrencyCode,
+                tc.name AS TargetCurrencyName,
+                tc.sign AS TargetCurrencySign
+            FROM inserted
+            JOIN Currency bc ON inserted.BaseCurrencyId = bc.id
+            JOIN Currency tc ON inserted.TargetCurrencyId = tc.id
             """;
 
     private final String SQL_UPDATE = """
-            UPDATE ExchangeRate
-            SET Rate = ?
-            WHERE BaseCurrencyId = (SELECT id FROM Currency WHERE code = ?)
-            AND TargetCurrencyId = (SELECT id FROM Currency WHERE code = ?)
+            WITH updated AS (
+                UPDATE ExchangeRate
+                SET Rate = ?
+                WHERE BaseCurrencyId = (SELECT id FROM Currency WHERE code = ?)
+                  AND TargetCurrencyId = (SELECT id FROM Currency WHERE code = ?)
+                RETURNING id, BaseCurrencyId, TargetCurrencyId, Rate
+            )
+            SELECT 
+                updated.id AS ExchangeRateId,
+                updated.Rate AS ExchangeRateRate,
+                bc.id AS BaseCurrencyId,
+                bc.code AS BaseCurrencyCode,
+                bc.name AS BaseCurrencyName,
+                bc.sign AS BaseCurrencySign,
+                tc.id AS TargetCurrencyId,
+                tc.code AS TargetCurrencyCode,
+                tc.name AS TargetCurrencyName,
+                tc.sign AS TargetCurrencySign
+            FROM updated
+            JOIN Currency bc ON updated.BaseCurrencyId = bc.id
+            JOIN Currency tc ON updated.TargetCurrencyId = tc.id
+            """;
+
+    private final String SQL_GET_RATE_BY_INTERMEDIATE_CURRENCY = """
+            SELECT
+                er1.id AS id,
+                (er2.Rate / er1.Rate) AS Rate,
+                bc.id AS BaseCurrencyId,
+                bc.code AS BaseCurrencyCode,
+                bc.name AS BaseCurrencyName,
+                bc.sign AS BaseCurrencySign,
+                tc.id AS TargetCurrencyId,
+                tc.code AS TargetCurrencyCode,
+                tc.name AS TargetCurrencyName,
+                tc.sign AS TargetCurrencySign
+                FROM ExchangeRate er1
+                JOIN ExchangeRate er2
+                 ON er1.BaseCurrencyId = er2.BaseCurrencyId
+                JOIN Currency bc
+                    ON er1.BaseCurrencyId = bc.id
+                JOIN Currency tc
+                    ON er2.TargetCurrencyId = tc.id
+                WHERE er1.TargetCurrencyId = (SELECT id FROM Currency WHERE code = ?)
+                  AND er2.TargetCurrencyId = (SELECT id FROM Currency WHERE code = ?)
+                  AND er1.BaseCurrencyId = (SELECT id FROM Currency WHERE code = ?);
             """;
 
     public List<ExchangeRate> findAll() {
@@ -84,10 +152,8 @@ public class ExchangeRateDao {
                 }
             }
         } catch (SQLException e) {
-
             throw new RuntimeException("Error finding exchange rate by ID", e);
         }
-
         return Optional.empty();
     }
 
@@ -103,17 +169,32 @@ public class ExchangeRateDao {
         } catch (SQLException e) {
             throw new RuntimeException("Error finding exchange rate by code", e);
         }
+        return Optional.empty();
+    }
 
+    public Optional<ExchangeRate> findRateByIntermediateCurrency(String base, String target, String intermediateCurrency) {
+        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_GET_RATE_BY_INTERMEDIATE_CURRENCY)) {
+            statement.setString(1, base);
+            statement.setString(2, target);
+            statement.setString(3, intermediateCurrency);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.of(mapRowToExchangeRate(resultSet));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException();
+        }
         return Optional.empty();
     }
 
     public ExchangeRate save(SaveExchangeRateDTO exchangeRateDTO) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
-            statement.setString(1, exchangeRateDTO.getBaseCurrencyCode());
+            statement.setBigDecimal(1, exchangeRateDTO.getRate());
             statement.setString(2, exchangeRateDTO.getBaseCurrencyCode());
-            statement.setBigDecimal(3, exchangeRateDTO.getRate());
-            statement.executeUpdate();
-            return getExchangeRateByGenerateId(statement);
+            statement.setString(3, exchangeRateDTO.getTargetCurrencyCode());
+            ResultSet resultSet = statement.executeQuery();
+            return mapRowToExchangeRate(resultSet);
         } catch (SQLException ex) {
             if (ex.getMessage().contains("[SQLITE_CONSTRAINT_UNIQUE]")) {
                 throw new CurrencyExistException();
@@ -125,44 +206,29 @@ public class ExchangeRateDao {
 
     public ExchangeRate update(SaveExchangeRateDTO saveExchangeRateDTO) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_UPDATE)) {
-            statement.setString(1, saveExchangeRateDTO.getBaseCurrencyCode());
-            statement.setString(2, saveExchangeRateDTO.getTargetCurrencyCode());
-            statement.setBigDecimal(3, saveExchangeRateDTO.getRate());
-            return getExchangeRateByGenerateId(statement);
+            statement.setBigDecimal(1, saveExchangeRateDTO.getRate());
+            statement.setString(2, saveExchangeRateDTO.getBaseCurrencyCode());
+            statement.setString(3, saveExchangeRateDTO.getTargetCurrencyCode());
+            ResultSet resultSet = statement.executeQuery();
+            return mapRowToExchangeRate(resultSet);
         } catch (SQLException ex) {
             throw new DataAccessException();
         }
     }
 
-    private ExchangeRate getExchangeRateByGenerateId(PreparedStatement statement) throws SQLException {
-        // Получение сгенерированного идентификатора
-        try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-            if (generatedKeys.next()) {
-                long id = generatedKeys.getLong(1);
-                Optional<ExchangeRate> optionalExchangeRate = findById((int) id);
-                if (optionalExchangeRate.isPresent()) {
-                    return optionalExchangeRate.get();
-                }
-            }
-        }
-        throw new SQLException("Failed to retrieve the ID.");
-    }
 
     private ExchangeRate mapRowToExchangeRate(ResultSet resultSet) throws SQLException {
         int id = resultSet.getInt("id");
         BigDecimal rate = resultSet.getBigDecimal("Rate").setScale(2, RoundingMode.HALF_UP);
+        Currency baseCurrency = new Currency(resultSet.getInt("BaseCurrencyId"),
+                resultSet.getString("BaseCurrencyCode"),
+                resultSet.getString("BaseCurrencyName"),
+                resultSet.getString("BaseCurrencySign"));
 
-        Currency baseCurrency = new Currency(resultSet.getInt("BaseCurrencyId"), resultSet.getString("BaseCurrencyCode"), resultSet.getString("BaseCurrencyName"), resultSet.getString("BaseCurrencySign"));
-
-        Currency targetCurrency = new Currency(resultSet.getInt("TargetCurrencyId"), resultSet.getString("TargetCurrencyCode"), resultSet.getString("TargetCurrencyName"), resultSet.getString("TargetCurrencySign"));
-
+        Currency targetCurrency = new Currency(resultSet.getInt("TargetCurrencyId"),
+                resultSet.getString("TargetCurrencyCode"),
+                resultSet.getString("TargetCurrencyName"),
+                resultSet.getString("TargetCurrencySign"));
         return new ExchangeRate(id, baseCurrency, targetCurrency, rate);
     }
-
-//    public List<ExchangeRate> findCurrencyExchangeByTargetCode(String code) throws SQLException {
-//        String joinCondition = NAME_TABLE_EXCHANGE_RATE + ".TargetCurrencyId = Currencies.id";
-//        return findByFieldWithJoin(NAME_TABLE_EXCHANGE_RATE, "code", code, "Currencies", joinCondition, exchangeCurrencyMapper);
-//    }
-
-
 }

@@ -1,11 +1,11 @@
 package org.project.cursexchange.servlet;
 
-import org.project.cursexchange.dto.ExchangeCalculationRateDTO;
-import org.project.cursexchange.dto.SaveExchangeRateDTO;
+import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.dto.ConvertAmountExchangeRateDTO;
+import org.project.cursexchange.dto.AmountExchangeRatesDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
-import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.service.ExchangeCurrencyService;
 import org.project.cursexchange.service.ExchangeRateValidationService;
 
@@ -19,15 +19,15 @@ import java.math.BigDecimal;
 
 @WebServlet("/exchange/*")
 public class ExchangeServlet extends HttpServlet {
-    private ExchangeCurrencyService exchangeCurrencyService;
-    private ExchangeRateValidationService exchangeRateValidationService;
     private final String requestParameterFrom = "from";
     private final String requestParameterTo = "to";
     private final String requestParameterAmount = "amount";
+    private ExchangeCurrencyService exchangeCurrencyService;
+    private ExchangeRateValidationService exchangeRateValidationService;
 
     @Override
     public void init() throws ServletException {
-        exchangeRateValidationService=new ExchangeRateValidationService();
+        exchangeRateValidationService = new ExchangeRateValidationService();
     }
 
     @Override
@@ -36,10 +36,12 @@ public class ExchangeServlet extends HttpServlet {
             String codeCurrencyFrom = request.getParameter(requestParameterFrom);
             String codeCurrencyTo = request.getParameter(requestParameterTo);
             String amount = request.getParameter(requestParameterAmount);
-            BigDecimal amountByDecimal =exchangeRateValidationService.getDecimal(amount);
-            SaveExchangeRateDTO saveExchangeRateDTO=new SaveExchangeRateDTO(codeCurrencyFrom, codeCurrencyTo, amountByDecimal);
-            ExchangeCalculationRateDTO exchangeCalculationRateDTO = exchangeCurrencyService.getExchangeCurrencyWithConvertedAmount(saveExchangeRateDTO);
-            response.getWriter().write(Util.convertToJson(exchangeCalculationRateDTO));
+            BigDecimal amountByDecimal = exchangeRateValidationService.getDecimal(amount);
+            AmountExchangeRatesDTO saveExchangeRateDTO = new AmountExchangeRatesDTO(codeCurrencyFrom,
+                    codeCurrencyTo,
+                    amountByDecimal);
+            ConvertAmountExchangeRateDTO convertAmountExchangeRateDTO = exchangeCurrencyService.getExchangeCurrencyWithConvertedAmount(saveExchangeRateDTO);
+            response.getWriter().write(Util.convertToJson(convertAmountExchangeRateDTO));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (DataAccessException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
