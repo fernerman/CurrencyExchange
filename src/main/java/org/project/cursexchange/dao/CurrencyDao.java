@@ -1,11 +1,11 @@
 package org.project.cursexchange.dao;
 
 import org.project.cursexchange.dto.SaveCurrencyDTO;
-import org.project.cursexchange.util.DatabaseConnection;
 import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
+import org.project.cursexchange.util.DatabaseConnection;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,12 +16,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class CurrencyDao {
-
-
     private static final String SQL_FIND_ALL = "SELECT * FROM Currencies";
     private static final String SQL_FIND_BY_ID = "SELECT * FROM Currencies WHERE id=?";
     private static final String SQL_FIND_BY_CODE = "SELECT * FROM Currencies WHERE Code=?";
-    private static final String SQL_SAVE = "INSERT INTO Currencies (Code, FullName, Sign) VALUES (?, ?, ?) RETURNING id";
+    private static final String SQL_SAVE = "INSERT INTO Currencies (Code, FullName, Sign) VALUES (?, ?, ?)";
 
     public Optional<Currency> findById(int id) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_ID)) {
@@ -35,7 +33,6 @@ public class CurrencyDao {
         }
         return Optional.empty();
     }
-
 
     public Optional<Currency> findByCode(String code) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_FIND_BY_CODE)) {
@@ -63,9 +60,8 @@ public class CurrencyDao {
         return currencies;
     }
 
-
-    public long save(SaveCurrencyDTO currency) {
-        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
+    public Currency save(SaveCurrencyDTO currency) {
+        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE, new String[]{"id"})) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getName());
             statement.setString(3, currency.getSign());
@@ -73,7 +69,11 @@ public class CurrencyDao {
             // Получение сгенерированного идентификатора
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                    return generatedKeys.getLong(1);
+                    long id = generatedKeys.getLong("id");
+                    return new Currency(id,
+                            currency.getCode(),
+                            currency.getName(),
+                            currency.getSign());
                 } else {
                     throw new SQLException("Failed to retrieve the ID.");
                 }
@@ -87,13 +87,7 @@ public class CurrencyDao {
         }
     }
 
-
     private Currency mapRowToCurrency(ResultSet resultSet) throws SQLException {
-        return new Currency(
-                resultSet.getInt("id"),
-                resultSet.getString("Code"),
-                resultSet.getString("FullName"),
-                resultSet.getString("Sign")
-        );
+        return new Currency(resultSet.getInt("id"), resultSet.getString("Code"), resultSet.getString("FullName"), resultSet.getString("Sign"));
     }
 }

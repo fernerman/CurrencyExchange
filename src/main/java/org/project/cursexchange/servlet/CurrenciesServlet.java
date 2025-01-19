@@ -51,8 +51,7 @@ public class CurrenciesServlet extends HttpServlet {
             String sign = request.getParameter(requestParameterSign);
             currencyValidationService.validateCurrency(code, name, sign);
             SaveCurrencyDTO CurrencySaveRequestDTO = new SaveCurrencyDTO( code, name, sign);
-            long id = currencyDao.save(CurrencySaveRequestDTO);
-            Currency currency=new Currency(id,code,name,sign);
+            Currency currency = currencyDao.save(CurrencySaveRequestDTO);
             response.setStatus(HttpServletResponse.SC_CREATED);
             response.getWriter().write(JsonConverter.convertToJson(currency));
         } catch (CurrencyExistException e) {

@@ -1,4 +1,5 @@
 package org.project.cursexchange.dto;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;

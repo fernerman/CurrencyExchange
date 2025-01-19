@@ -1,12 +1,11 @@
 package org.project.cursexchange.service;
 
 import org.project.cursexchange.dao.ExchangeRateDao;
-import org.project.cursexchange.dto.ExchangeCalculationDTO;
+import org.project.cursexchange.dto.ExchangeCalculationRateDTO;
 import org.project.cursexchange.dto.SaveExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
-import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.model.ExchangeRate;
 
 import java.math.BigDecimal;
@@ -24,9 +23,8 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
 
 
     @Override
-    public ExchangeCalculationDTO getExchangeCurrencyWithConvertedAmount(String baseCurrencyCode, String targetCurrencyCode, String amount) {
+    public ExchangeCalculationRateDTO getExchangeCurrencyWithConvertedAmount(SaveExchangeRateDTO saveExchangeRateDTO) {
         try {
-            BigDecimal amountByDigit = parseDecimal(amount);
             BigDecimal directRate = getDirectExchangeRate(baseCurrencyCode, targetCurrencyCode);
             if (directRate != null) {
                 return buildExchangeCalculationDTO(baseCurrencyCode, targetCurrencyCode, directRate, amountByDigit, directRate.multiply(amountByDigit));
@@ -48,19 +46,6 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
         }
     }
 
-    private BigDecimal parseDecimal(String amount) {
-        try {
-            var digit = new BigDecimal(amount);
-            if (digit.compareTo(BigDecimal.ZERO) >= 0) {
-                return new BigDecimal(amount).setScale(6, RoundingMode.HALF_UP);
-            } else {
-                throw new IllegalArgumentException("Поле не может быть отрицательным");
-            }
-
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Неверный формат для числа" + amount);
-        }
-    }
 
     private BigDecimal getDirectExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
         return getExchangeRate(baseCurrencyCode, targetCurrencyCode);
@@ -90,13 +75,13 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
         throw new CurrencyNotFound("Валютная пара не найдена.");
     }
 
-    private BigDecimal getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
-        Optional<ExchangeRate> exchangeCurrency = findByCodes(baseCurrencyCode, targetCurrencyCode);
-        return exchangeCurrency.map(ExchangeRate::getRate).orElse(null);
-    }
+//    private BigDecimal getExchangeRate(String baseCurrencyCode, String targetCurrencyCode) {
+//        Optional<ExchangeRate> exchangeCurrency = findByCodes(baseCurrencyCode, targetCurrencyCode);
+//        return exchangeCurrency.map(ExchangeRate::getRate).orElse(null);
+//    }
 
-    private ExchangeCalculationDTO buildExchangeCalculationDTO(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
-        return new ExchangeCalculationDTO(DAO.findByCode(baseCurrencyCode), DAO.findByCode(targetCurrencyCode), rate, amount, convertedAmount.setScale(2, RoundingMode.HALF_UP));
-    }
+//    private ExchangeCalculationDTO buildExchangeCalculationDTO(String baseCurrencyCode, String targetCurrencyCode, BigDecimal rate, BigDecimal amount, BigDecimal convertedAmount) {
+//        return new ExchangeCalculationDTO(DAO.findByCode(baseCurrencyCode), DAO.findByCode(targetCurrencyCode), rate, amount, convertedAmount.setScale(2, RoundingMode.HALF_UP));
+//    }
 
 }
