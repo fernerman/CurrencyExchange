@@ -4,6 +4,7 @@ import org.project.cursexchange.dto.SaveCurrencyDTO;
 import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
+import org.project.cursexchange.mapper.CurrencyMapper;
 import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.util.DatabaseConnection;
 
@@ -26,7 +27,7 @@ public class CurrencyDao {
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                return Optional.of(mapRowToCurrency(resultSet));
+                return Optional.of(CurrencyMapper.mapRowToCurrency(resultSet));
             }
         } catch (SQLException e) {
             throw new DataAccessException();
@@ -39,7 +40,7 @@ public class CurrencyDao {
             statement.setString(1, code);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                return Optional.of((mapRowToCurrency(resultSet)));
+                return Optional.of((CurrencyMapper.mapRowToCurrency(resultSet)));
             }
         } catch (SQLException e) {
             throw new DataAccessException();
@@ -52,7 +53,7 @@ public class CurrencyDao {
         try (Statement statement = DatabaseConnection.getConnection().createStatement()) {
             ResultSet resultSet = statement.executeQuery(SQL_FIND_ALL);
             while (resultSet.next()) {
-                currencies.add(mapRowToCurrency(resultSet));
+                currencies.add(CurrencyMapper.mapRowToCurrency(resultSet));
             }
         } catch (SQLException e) {
             throw new DataAccessException();
@@ -85,12 +86,5 @@ public class CurrencyDao {
                 throw new DataAccessException();
             }
         }
-    }
-
-    private Currency mapRowToCurrency(ResultSet resultSet) throws SQLException {
-        return new Currency(resultSet.getInt("id"),
-                resultSet.getString("Code"),
-                resultSet.getString("FullName"),
-                resultSet.getString("Sign"));
     }
 }

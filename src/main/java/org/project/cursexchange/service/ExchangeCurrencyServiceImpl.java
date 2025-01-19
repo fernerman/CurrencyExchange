@@ -4,7 +4,7 @@ import org.project.cursexchange.dao.ExchangeRateDao;
 import org.project.cursexchange.dto.AmountExchangeRatesDTO;
 import org.project.cursexchange.dto.ConvertAmountExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
-import org.project.cursexchange.mapper.ExchangeRateMapper;
+import org.project.cursexchange.mapper.ExchangeRateWithAmountMapper;
 import org.project.cursexchange.model.ExchangeRate;
 
 import java.math.BigDecimal;
@@ -25,7 +25,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
         BigDecimal amount = dto.getAmount();
         Optional<ExchangeRate> rateDirect = exchangeRateDao.findByCodes(baseCode, targetCode);
         if (rateDirect.isPresent()) {
-            return ExchangeRateMapper.toDTO(
+            return ExchangeRateWithAmountMapper.toDTO(
                     rateDirect.get(),
                     rateDirect.get().getRate(),
                     amount
@@ -34,7 +34,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
         Optional<ExchangeRate> reversedRate = exchangeRateDao.findByCodes(targetCode, baseCode);
         if (reversedRate.isPresent()) {
             BigDecimal rate = BigDecimal.ONE.divide(reversedRate.get().getRate(), 2, RoundingMode.HALF_UP);
-            return ExchangeRateMapper.toDTO(
+            return ExchangeRateWithAmountMapper.toDTO(
                     reversedRate.get(),
                     rate,
                     amount
@@ -43,7 +43,7 @@ public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
         Optional<ExchangeRate> intermediateCurrency = exchangeRateDao.findRateByIntermediateCurrency(baseCode, targetCode, "USD");
         if (intermediateCurrency.isPresent()) {
             BigDecimal rate = intermediateCurrency.get().getRate();
-            return ExchangeRateMapper.toDTO(
+            return ExchangeRateWithAmountMapper.toDTO(
                     intermediateCurrency.get(),
                     rate,
                     amount

@@ -3,6 +3,7 @@ package org.project.cursexchange.dao;
 import org.project.cursexchange.dto.SaveExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.DataAccessException;
+import org.project.cursexchange.mapper.ExchangeRateMapper;
 import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.model.ExchangeRate;
 import org.project.cursexchange.util.DatabaseConnection;
@@ -135,7 +136,7 @@ public class ExchangeRateDao {
         try (Statement statement = DatabaseConnection.getConnection().createStatement()) {
             ResultSet resultSet = statement.executeQuery(SQL_FIND_ALL);
             while (resultSet.next()) {
-                exchangeRates.add(mapRowToExchangeRate(resultSet));
+                exchangeRates.add(ExchangeRateMapper.mapRowToExchangeRate(resultSet));
             }
         } catch (SQLException e) {
             throw new DataAccessException();
@@ -148,7 +149,7 @@ public class ExchangeRateDao {
             statement.setInt(1, id);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    return Optional.of(mapRowToExchangeRate(resultSet));
+                    return Optional.of(ExchangeRateMapper.mapRowToExchangeRate(resultSet));
                 }
             }
         } catch (SQLException e) {
@@ -163,7 +164,7 @@ public class ExchangeRateDao {
             statement.setString(2, target);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    return Optional.of(mapRowToExchangeRate(resultSet));
+                    return Optional.of(ExchangeRateMapper.mapRowToExchangeRate(resultSet));
                 }
             }
         } catch (SQLException e) {
@@ -179,7 +180,7 @@ public class ExchangeRateDao {
             statement.setString(3, intermediateCurrency);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    return Optional.of(mapRowToExchangeRate(resultSet));
+                    return Optional.of(ExchangeRateMapper.mapRowToExchangeRate(resultSet));
                 }
             }
         } catch (SQLException e) {
@@ -194,7 +195,7 @@ public class ExchangeRateDao {
             statement.setString(2, exchangeRateDTO.getBaseCurrencyCode());
             statement.setString(3, exchangeRateDTO.getTargetCurrencyCode());
             ResultSet resultSet = statement.executeQuery();
-            return mapRowToExchangeRate(resultSet);
+            return ExchangeRateMapper.mapRowToExchangeRate(resultSet);
         } catch (SQLException ex) {
             if (ex.getMessage().contains("[SQLITE_CONSTRAINT_UNIQUE]")) {
                 throw new CurrencyExistException();
@@ -210,25 +211,9 @@ public class ExchangeRateDao {
             statement.setString(2, saveExchangeRateDTO.getBaseCurrencyCode());
             statement.setString(3, saveExchangeRateDTO.getTargetCurrencyCode());
             ResultSet resultSet = statement.executeQuery();
-            return mapRowToExchangeRate(resultSet);
+            return ExchangeRateMapper.mapRowToExchangeRate(resultSet);
         } catch (SQLException ex) {
             throw new DataAccessException();
         }
-    }
-
-
-    private ExchangeRate mapRowToExchangeRate(ResultSet resultSet) throws SQLException {
-        int id = resultSet.getInt("id");
-        BigDecimal rate = resultSet.getBigDecimal("Rate").setScale(2, RoundingMode.HALF_UP);
-        Currency baseCurrency = new Currency(resultSet.getInt("BaseCurrencyId"),
-                resultSet.getString("BaseCurrencyCode"),
-                resultSet.getString("BaseCurrencyName"),
-                resultSet.getString("BaseCurrencySign"));
-
-        Currency targetCurrency = new Currency(resultSet.getInt("TargetCurrencyId"),
-                resultSet.getString("TargetCurrencyCode"),
-                resultSet.getString("TargetCurrencyName"),
-                resultSet.getString("TargetCurrencySign"));
-        return new ExchangeRate(id, baseCurrency, targetCurrency, rate);
     }
 }
