@@ -7,7 +7,4 @@ public class CurrencyExchangeNotFound extends RuntimeException {
         super(DEFAULT_MESSAGE);
     }
 
-    public CurrencyExchangeNotFound(String message) {
-        super(message);
-    }
 }

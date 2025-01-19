@@ -7,7 +7,4 @@ public class CurrencyExistException extends RuntimeException {
         super(DEFAULT_MESSAGE);
     }
 
-    public CurrencyExistException(String message) {
-        super(message);
-    }
 }

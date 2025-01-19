@@ -8,6 +8,7 @@ import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.service.ExchangeCurrencyService;
 import org.project.cursexchange.service.ExchangeRateValidationService;
+import org.project.cursexchange.util.JsonConverter;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -41,17 +42,17 @@ public class ExchangeServlet extends HttpServlet {
                     codeCurrencyTo,
                     amountByDecimal);
             ConvertAmountExchangeRateDTO convertAmountExchangeRateDTO = exchangeCurrencyService.getExchangeCurrencyWithConvertedAmount(saveExchangeRateDTO);
-            response.getWriter().write(Util.convertToJson(convertAmountExchangeRateDTO));
+            response.getWriter().write(JsonConverter.convertToJson(convertAmountExchangeRateDTO));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (DataAccessException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         } catch (CurrencyExchangeNotFound | CurrencyNotFound e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write(Util.convertToJson(ErrorResponse.sendError(e)));
+            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
     }
 }

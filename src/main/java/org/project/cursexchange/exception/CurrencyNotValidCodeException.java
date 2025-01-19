@@ -6,8 +6,4 @@ public class CurrencyNotValidCodeException extends RuntimeException {
     public CurrencyNotValidCodeException() {
         super(DEFAULT_MESSAGE);
     }
-
-    public CurrencyNotValidCodeException(String message) {
-        super(message);
-    }
 }

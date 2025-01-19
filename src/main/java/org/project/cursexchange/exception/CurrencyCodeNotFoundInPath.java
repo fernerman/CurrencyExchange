@@ -7,7 +7,4 @@ public class CurrencyCodeNotFoundInPath extends RuntimeException {
         super(DEFAULT_MESSAGE);
     }
 
-    public CurrencyCodeNotFoundInPath(String message) {
-        super(message);
-    }
 }
