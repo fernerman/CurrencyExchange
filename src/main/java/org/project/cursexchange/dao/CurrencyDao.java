@@ -62,7 +62,7 @@ public class CurrencyDao {
     }
 
     public Currency save(SaveCurrencyDTO currency) {
-        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE, new String[]{"id"})) {
+        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getName());
             statement.setString(3, currency.getSign());
@@ -70,7 +70,7 @@ public class CurrencyDao {
             // Получение сгенерированного идентификатора
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
-                    long id = generatedKeys.getLong("id");
+                    long id = generatedKeys.getLong(1);
                     return new Currency(id,
                             currency.getCode(),
                             currency.getName(),

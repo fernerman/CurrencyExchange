@@ -10,17 +10,18 @@ import java.sql.SQLException;
 
 public class ExchangeRateMapper {
     public static ExchangeRate mapRowToExchangeRate(ResultSet resultSet) throws SQLException {
-        int id = resultSet.getInt("id");
-        BigDecimal rate = resultSet.getBigDecimal("Rate").setScale(2, RoundingMode.HALF_UP);
-        Currency baseCurrency = new Currency(resultSet.getInt("BaseCurrencyId"),
-                resultSet.getString("BaseCurrencyCode"),
-                resultSet.getString("BaseCurrencyName"),
-                resultSet.getString("BaseCurrencySign"));
+        int id = resultSet.getInt(1);
+        BigDecimal rate = resultSet.getBigDecimal(4).setScale(2, RoundingMode.HALF_UP);
+        Currency baseCurrency = new Currency(resultSet.getInt(5),
+                resultSet.getString(6),
+                resultSet.getString(7),
+                resultSet.getString(8));
 
-        Currency targetCurrency = new Currency(resultSet.getInt("TargetCurrencyId"),
-                resultSet.getString("TargetCurrencyCode"),
-                resultSet.getString("TargetCurrencyName"),
-                resultSet.getString("TargetCurrencySign"));
+        Currency targetCurrency = new Currency(resultSet.getInt(9),
+                resultSet.getString(10),
+                resultSet.getString(11),
+                resultSet.getString(12));
+
         return new ExchangeRate(id, baseCurrency, targetCurrency, rate);
     }
 }
