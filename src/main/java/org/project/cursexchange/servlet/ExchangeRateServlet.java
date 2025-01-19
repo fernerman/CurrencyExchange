@@ -1,15 +1,13 @@
 package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.dao.ExchangeRateDao;
+import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.dto.SaveExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
+import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
-import org.project.cursexchange.exception.CurrencyExchangeNotFound;
-
-import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.model.ExchangeRate;
-import org.project.cursexchange.service.ExchangeCurrencyService;
 import org.project.cursexchange.service.ExchangeRateValidationService;
 import org.project.cursexchange.util.JsonConverter;
 
@@ -22,16 +20,13 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import static org.project.cursexchange.service.CurrencyValidationService.MAX_LENGTH_CODE;
-
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateServlet extends HttpServlet {
 
-    private ExchangeCurrencyService exchangeCurrencyService;
-    private ExchangeRateDao exchangeRateDao;
-    private ExchangeRateValidationService exchangeRateValidationService;
     private final int MAX_LENGTH_CODE = 3;
     private final String rateParameter = "rate";
+    private ExchangeRateDao exchangeRateDao;
+    private ExchangeRateValidationService exchangeRateValidationService;
 
     @Override
     public void init() throws ServletException {
@@ -72,10 +67,10 @@ public class ExchangeRateServlet extends HttpServlet {
             String correctPath = getCodesFromPath(pathInfo);
             String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = correctPath.substring(MAX_LENGTH_CODE);
-            BigDecimal rateByDigit=exchangeRateValidationService.getDecimal(rateFromUser);
-            SaveExchangeRateDTO saveExchangeRateDTO= new SaveExchangeRateDTO(baseCode,targetCode,rateByDigit);
-            long id = exchangeRateDao.update(saveExchangeRateDTO);
-            response.getWriter().write(JsonConverter.convertToJson(exchangeRateDao.findById((int)id).get()));
+            BigDecimal rateByDigit = exchangeRateValidationService.getDecimal(rateFromUser);
+            SaveExchangeRateDTO saveExchangeRateDTO = new SaveExchangeRateDTO(baseCode, targetCode, rateByDigit);
+            ExchangeRate exchangeRate = exchangeRateDao.update(saveExchangeRateDTO);
+            response.getWriter().write(JsonConverter.convertToJson(exchangeRate));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -88,6 +83,7 @@ public class ExchangeRateServlet extends HttpServlet {
             response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
     }
+
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         // Проверяем метод запроса

@@ -47,9 +47,12 @@ public class ExchangeRateDao {
              WHERE bc.code = ? OR tc.code = ?";
             """;
     private final String SQL_SAVE = """
-            INSERT INTO ExchangeRate (BaseCurrencyId, TargetCurrencyId, Rate)
-            VALUES (?, ?, ?)
-            RETURNING id
+                INSERT INTO ExchangeRate (BaseCurrencyId, TargetCurrencyId, Rate)
+                VALUES (
+                    (SELECT id FROM Currency WHERE code = ?),
+                    (SELECT id FROM Currency WHERE code = ?),
+                    ?
+                )
             """;
 
     private final String SQL_UPDATE = """
@@ -57,7 +60,6 @@ public class ExchangeRateDao {
             SET Rate = ?
             WHERE BaseCurrencyId = (SELECT id FROM Currency WHERE code = ?)
             AND TargetCurrencyId = (SELECT id FROM Currency WHERE code = ?)
-            RETURNING id
             """;
 
     public List<ExchangeRate> findAll() {
@@ -105,21 +107,13 @@ public class ExchangeRateDao {
         return Optional.empty();
     }
 
-    public long save(SaveExchangeRateDTO exchangeRateDTO) {
-
+    public ExchangeRate save(SaveExchangeRateDTO exchangeRateDTO) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
             statement.setString(1, exchangeRateDTO.getBaseCurrencyCode());
             statement.setString(2, exchangeRateDTO.getBaseCurrencyCode());
             statement.setBigDecimal(3, exchangeRateDTO.getRate());
             statement.executeUpdate();
-            // Получение сгенерированного идентификатора
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    return generatedKeys.getLong(1);
-                } else {
-                    throw new SQLException("Failed to retrieve the ID.");
-                }
-            }
+            return getExchangeRateByGenerateId(statement);
         } catch (SQLException ex) {
             if (ex.getMessage().contains("[SQLITE_CONSTRAINT_UNIQUE]")) {
                 throw new CurrencyExistException();
@@ -129,22 +123,29 @@ public class ExchangeRateDao {
         }
     }
 
-    public long update(SaveExchangeRateDTO saveExchangeRateDTO)  {
+    public ExchangeRate update(SaveExchangeRateDTO saveExchangeRateDTO) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_UPDATE)) {
             statement.setString(1, saveExchangeRateDTO.getBaseCurrencyCode());
             statement.setString(2, saveExchangeRateDTO.getTargetCurrencyCode());
             statement.setBigDecimal(3, saveExchangeRateDTO.getRate());
-            // Получение сгенерированного идентификатора
-            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    return generatedKeys.getLong(1);
-                } else {
-                    throw new SQLException("Failed to retrieve the ID.");
-                }
-            }
+            return getExchangeRateByGenerateId(statement);
         } catch (SQLException ex) {
             throw new DataAccessException();
         }
+    }
+
+    private ExchangeRate getExchangeRateByGenerateId(PreparedStatement statement) throws SQLException {
+        // Получение сгенерированного идентификатора
+        try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+            if (generatedKeys.next()) {
+                long id = generatedKeys.getLong(1);
+                Optional<ExchangeRate> optionalExchangeRate = findById((int) id);
+                if (optionalExchangeRate.isPresent()) {
+                    return optionalExchangeRate.get();
+                }
+            }
+        }
+        throw new SQLException("Failed to retrieve the ID.");
     }
 
     private ExchangeRate mapRowToExchangeRate(ResultSet resultSet) throws SQLException {

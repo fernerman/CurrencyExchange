@@ -53,8 +53,8 @@ public class ExchangeRatesServlet extends HttpServlet {
             String rate = request.getParameter(rateParameter);
             BigDecimal rateByDecimal=exchangeRateValidationService.getDecimal(rate);
             SaveExchangeRateDTO saveExchangeRateDTO=new SaveExchangeRateDTO(baseCurrencyCode, targetCurrencyCode, rateByDecimal);
-            long id=exchangeRateDao.save(saveExchangeRateDTO);
-            response.getWriter().write(JsonConverter.convertToJson(exchangeRateDao.findById((int)id).get()));
+            ExchangeRate exchangeRate =exchangeRateDao.save(saveExchangeRateDTO);
+            response.getWriter().write(JsonConverter.convertToJson(exchangeRate));
             response.setStatus(HttpServletResponse.SC_CREATED);
         } catch (IllegalArgumentException ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
