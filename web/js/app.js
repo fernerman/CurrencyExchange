@@ -133,28 +133,26 @@ $(document).ready(function() {
         const pair = $('#edit-exchange-rate-modal .modal-title').text().replace('Edit ', '').replace(' Exchange Rate', '');
         const exchangeRate = $('#edit-exchange-rate-modal #exchange-rate-input').val();
 
-
-
         // send values to the server with a patch request
-        $.ajax({
-            url: `${host}/exchangeRate/${pair}`,
-            type: "PATCH",
-            contentType : "application/x-www-form-urlencoded",
-            data: `${exchangeRate}`,
-            success: function() {
-          // set changed values to the table row
-              const row = $(`tr:contains(${pair})`);
-              row.find('td:eq(1)').text(exchangeRate);
-              requestExchangeRates();
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                const error = JSON.parse(jqXHR.responseText);
-                const toast = $('#api-error-toast');
+     $.ajax({
+         url: `${host}/exchangeRate/${pair}`,
+         type: "PATCH",
+         contentType: "application/x-www-form-urlencoded",
+         data: `${exchangeRate}`,
+         success: function(response) {
+             // Log the response to check if it's valid JSON
+             console.log("Success response:", response);
+             // Обновление значения в таблице
+             const row = $(`tr:contains(${pair})`);
+             row.find('td:eq(1)').text(exchangeRate);
+         },
+         error: function(xhr, status, error) {
+             console.error("AJAX request failed:", status, error);
+             // Log the response body if available
+             console.log("Response body:", xhr.responseText);
+         }
+     });
 
-                $(toast).find('.toast-body').text(error.message);
-                toast.toast("show");
-            }
-        });
 
         // close the modal
         $('#edit-exchange-rate-modal').modal('hide');

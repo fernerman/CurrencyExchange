@@ -3,6 +3,7 @@ package org.project.cursexchange.servlet;
 import org.project.cursexchange.dao.ExchangeRateDao;
 import org.project.cursexchange.dto.ErrorResponse;
 import org.project.cursexchange.dto.RequestExchangeRateDTO;
+import org.project.cursexchange.dto.ResponseExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.exception.CurrencyNotFound;
@@ -24,7 +25,7 @@ import java.util.Optional;
 public class ExchangeRateServlet extends HttpServlet {
 
     private final int MAX_LENGTH_CODE = 3;
-    private final String rateParameter = "rate";
+    private final String rateParameter = "Rate";
     private ExchangeRateDao exchangeRateDao;
     private ExchangeRateValidationService exchangeRateValidationService;
 
@@ -59,17 +60,26 @@ public class ExchangeRateServlet extends HttpServlet {
             response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
     }
-
+    private String getRateFromForm(HttpServletRequest request) throws IOException {
+        // Reading the request body as a JSON string
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = request.getReader().readLine()) != null) {
+            sb.append(line);
+        }
+        return sb.toString();
+    }
     public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
-            String rateFromUser = request.getParameter(rateParameter);
+
+            String rateFromUser = getRateFromForm(request);
             String pathInfo = request.getPathInfo();
             String correctPath = getCodesFromPath(pathInfo);
             String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = correctPath.substring(MAX_LENGTH_CODE);
             BigDecimal rateByDigit = exchangeRateValidationService.getDecimal(rateFromUser);
             RequestExchangeRateDTO requestExchangeRateDTO = new RequestExchangeRateDTO(baseCode, targetCode, rateByDigit);
-            ExchangeRate exchangeRate = exchangeRateDao.update(requestExchangeRateDTO);
+            ResponseExchangeRateDTO exchangeRate = exchangeRateDao.update(requestExchangeRateDTO);
             response.getWriter().write(JsonConverter.convertToJson(exchangeRate));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (IllegalArgumentException e) {

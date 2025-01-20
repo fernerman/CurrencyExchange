@@ -26,7 +26,7 @@ public class FilterResponse implements Filter {
             httpResponse.setContentType("text/html;charset=UTF-8");
 
             httpResponse.setHeader("Access-Control-Allow-Origin", "*");
-            httpResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE");
+            httpResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, PATCH,OPTIONS, DELETE");
             httpResponse.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
             httpResponse.setHeader("Access-Control-Allow-Credentials", "true");
         }

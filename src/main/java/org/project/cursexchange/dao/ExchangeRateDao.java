@@ -45,27 +45,8 @@ public class ExchangeRateDao {
             """;
 
     private final String SQL_UPDATE = """
-            WITH updated AS (
-                UPDATE ExchangeRates
-                SET Rate = ?
-                WHERE BaseCurrencyId = (SELECT id FROM Currency WHERE code = ?)
-                  AND TargetCurrencyId = (SELECT id FROM Currency WHERE code = ?)
-                RETURNING id, BaseCurrencyId, TargetCurrencyId, Rate
-            )
-            SELECT 
-                updated.id AS ExchangeRateId,
-                updated.Rate AS ExchangeRateRate,
-                bc.id AS BaseCurrencyId,
-                bc.code AS BaseCurrencyCode,
-                bc.name AS BaseCurrencyName,
-                bc.sign AS BaseCurrencySign,
-                tc.id AS TargetCurrencyId,
-                tc.code AS TargetCurrencyCode,
-                tc.name AS TargetCurrencyName,
-                tc.sign AS TargetCurrencySign
-            FROM updated
-            JOIN Currencies bc ON updated.BaseCurrencyId = bc.id
-            JOIN Currencies tc ON updated.TargetCurrencyId = tc.id
+            UPDATE ExchangeRates
+            SET Rate = ?;
             """;
 
     private final String SQL_GET_RATE_BY_INTERMEDIATE_CURRENCY = """
@@ -150,8 +131,8 @@ public class ExchangeRateDao {
         return Optional.empty();
     }
 
-    public ResponseExchangeRateDTO save(RequestExchangeRateDTO responseExchangeRateDTO) {
-        ResponseExchangeRateDTO responseExchangeRate = getResponseExchangeRate(responseExchangeRateDTO);
+    public ResponseExchangeRateDTO save(RequestExchangeRateDTO requestExchangeRateDTO) {
+        ResponseExchangeRateDTO responseExchangeRate = getResponseExchangeRate(requestExchangeRateDTO);
         try (Connection conn = DatabaseConnection.getConnection()) {
             try (PreparedStatement statement = conn.prepareStatement(SQL_SAVE, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, (int) responseExchangeRate.getBaseCurrency().getId());
@@ -185,13 +166,19 @@ public class ExchangeRateDao {
         throw new CurrencyNotFound();
     }
 
-    public ExchangeRate update(RequestExchangeRateDTO requestExchangeRateDTO) {
-        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_UPDATE)) {
+    public ResponseExchangeRateDTO update(RequestExchangeRateDTO requestExchangeRateDTO) {
+        ResponseExchangeRateDTO responseExchangeRate = getResponseExchangeRate(requestExchangeRateDTO);
+        try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_UPDATE, Statement.RETURN_GENERATED_KEYS)) {
             statement.setBigDecimal(1, requestExchangeRateDTO.getRate());
-            statement.setString(2, requestExchangeRateDTO.getBaseCurrencyCode());
-            statement.setString(3, requestExchangeRateDTO.getTargetCurrencyCode());
-            ResultSet resultSet = statement.executeQuery();
-            return ExchangeRateMapper.mapRowToExchangeRate(resultSet);
+            statement.executeUpdate();
+            try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    responseExchangeRate.setId(generatedKeys.getLong(1));
+                    return responseExchangeRate;
+                } else {
+                    throw new SQLException("Updating record failed.");
+                }
+            }
         } catch (SQLException ex) {
             throw new DataAccessException();
         }
