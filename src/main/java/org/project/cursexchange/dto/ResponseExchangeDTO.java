@@ -11,8 +11,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
-public class ConvertAmountExchangeRateDTO {
+public class ResponseExchangeDTO {
     private Currency currencyBase;
     private Currency currencyTarget;
     private BigDecimal rate;

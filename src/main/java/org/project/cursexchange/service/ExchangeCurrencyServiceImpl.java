@@ -1,53 +1,31 @@
 package org.project.cursexchange.service;
 
 import org.project.cursexchange.dao.ExchangeRateDao;
-import org.project.cursexchange.dto.AmountExchangeRatesDTO;
-import org.project.cursexchange.dto.ConvertAmountExchangeRateDTO;
+import org.project.cursexchange.dto.RequestExchangeDTO;
+import org.project.cursexchange.dto.ResponseExchangeDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
-import org.project.cursexchange.mapper.ExchangeRateWithAmountMapper;
-import org.project.cursexchange.model.ExchangeRate;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Optional;
 
 public class ExchangeCurrencyServiceImpl implements ExchangeCurrencyService {
-    private final ExchangeRateDao exchangeRateDao;
-
-    public ExchangeCurrencyServiceImpl(ExchangeRate exchangeRate) {
-        exchangeRateDao = new ExchangeRateDao();
-    }
+    //by default
+    private static final String CURRENCY_CODE = "USD";
+    private final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
 
     @Override
-    public ConvertAmountExchangeRateDTO getExchangeCurrencyWithConvertedAmount(AmountExchangeRatesDTO dto) {
-        String baseCode = dto.getBaseCurrencyCode();
-        String targetCode = dto.getTargetCurrencyCode();
-        BigDecimal amount = dto.getAmount();
-        Optional<ExchangeRate> rateDirect = exchangeRateDao.findByCodes(baseCode, targetCode);
-        if (rateDirect.isPresent()) {
-            return ExchangeRateWithAmountMapper.toDTO(
-                    rateDirect.get(),
-                    rateDirect.get().getRate(),
-                    amount
-            );
+    public ResponseExchangeDTO exchangeCurrencies(RequestExchangeDTO dto) {
+        Optional<ResponseExchangeDTO> exchangeResponseDTO = exchangeRateDao.findDirectExchangeRate(dto);
+        if (exchangeResponseDTO.isPresent()) {
+            return exchangeResponseDTO.get();
         }
-        Optional<ExchangeRate> reversedRate = exchangeRateDao.findByCodes(targetCode, baseCode);
-        if (reversedRate.isPresent()) {
-            BigDecimal rate = BigDecimal.ONE.divide(reversedRate.get().getRate(), 2, RoundingMode.HALF_UP);
-            return ExchangeRateWithAmountMapper.toDTO(
-                    reversedRate.get(),
-                    rate,
-                    amount
-            );
+        exchangeResponseDTO = exchangeRateDao.findReversedExchangeRate(dto);
+        if (exchangeResponseDTO.isPresent()) {
+            return exchangeResponseDTO.get();
         }
-        Optional<ExchangeRate> intermediateCurrency = exchangeRateDao.findRateByIntermediateCurrency(baseCode, targetCode, "USD");
-        if (intermediateCurrency.isPresent()) {
-            BigDecimal rate = intermediateCurrency.get().getRate();
-            return ExchangeRateWithAmountMapper.toDTO(
-                    intermediateCurrency.get(),
-                    rate,
-                    amount
-            );
+
+        exchangeResponseDTO = exchangeRateDao.findIntermediateExchangeRate(dto, CURRENCY_CODE);
+        if (exchangeResponseDTO.isPresent()) {
+            return exchangeResponseDTO.get();
         }
         throw new CurrencyExchangeNotFound();
     }

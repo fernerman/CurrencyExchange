@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class SaveCurrencyDTO {
+public class RequestCurrencyDTO {
     private String code;
     private String name;
     private String sign;

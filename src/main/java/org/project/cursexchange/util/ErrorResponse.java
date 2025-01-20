@@ -1,4 +1,4 @@
-package org.project.cursexchange.dto;
+package org.project.cursexchange.util;
 
 public class ErrorResponse {
     private String message;
@@ -9,13 +9,5 @@ public class ErrorResponse {
 
     public static ErrorResponse sendError(Exception exception) {
         return new ErrorResponse(exception.getMessage());
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }

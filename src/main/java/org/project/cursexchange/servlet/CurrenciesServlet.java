@@ -1,11 +1,11 @@
 package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.dao.CurrencyDao;
-import org.project.cursexchange.dto.SaveCurrencyDTO;
+import org.project.cursexchange.dto.RequestCurrencyDTO;
 import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
-import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.util.ErrorResponse;
 import org.project.cursexchange.service.CurrencyValidationService;
 import org.project.cursexchange.util.JsonConverter;
 
@@ -50,7 +50,7 @@ public class CurrenciesServlet extends HttpServlet {
             String name = request.getParameter(requestParameterName);
             String sign = request.getParameter(requestParameterSign);
             currencyValidationService.validateCurrency(code, name, sign);
-            SaveCurrencyDTO CurrencySaveRequestDTO = new SaveCurrencyDTO( code, name, sign);
+            RequestCurrencyDTO CurrencySaveRequestDTO = new RequestCurrencyDTO( code, name, sign);
             Currency currency = currencyDao.save(CurrencySaveRequestDTO);
             response.setStatus(HttpServletResponse.SC_CREATED);
             response.getWriter().write(JsonConverter.convertToJson(currency));

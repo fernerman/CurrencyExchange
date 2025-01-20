@@ -1,17 +1,23 @@
 package org.project.cursexchange.dao;
 
+import org.project.cursexchange.dto.RequestExchangeDTO;
 import org.project.cursexchange.dto.RequestExchangeRateDTO;
+import org.project.cursexchange.dto.ResponseExchangeDTO;
 import org.project.cursexchange.dto.ResponseExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.mapper.ExchangeRateMapper;
+import org.project.cursexchange.mapper.ExchangeRateWithAmountMapper;
 import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.model.ExchangeRate;
 import org.project.cursexchange.util.DatabaseConnection;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class ExchangeRateDao {
@@ -31,9 +37,7 @@ public class ExchangeRateDao {
             """;
 
     private final String SQL_FIND_BY_CODES = """
-             SELECT er.id, er.Rate,er.BaseCurrencyId, er.TargetCurrencyId,
-             bc.id AS BaseCurrencyId, bc.Code AS BaseCurrencyCode, bc.FullName AS BaseCurrencyName, bc.Sign AS BaseCurrencySign,
-             tc.id AS TargetCurrencyId, tc.Code AS TargetCurrencyCode, tc.FullName AS TargetCurrencyName, tc.Sign AS TargetCurrencySign;
+             SELECT *
              FROM ExchangeRates er
              JOIN Currencies bc ON er.BaseCurrencyId = bc.id
              JOIN Currencies tc ON er.TargetCurrencyId = tc.id
@@ -51,26 +55,17 @@ public class ExchangeRateDao {
 
     private final String SQL_GET_RATE_BY_INTERMEDIATE_CURRENCY = """
             SELECT
-                er1.id AS id,
-                (er2.Rate / er1.Rate) AS Rate,
-                bc.id AS BaseCurrencyId,
-                bc.code AS BaseCurrencyCode,
-                bc.name AS BaseCurrencyName,
-                bc.sign AS BaseCurrencySign,
-                tc.id AS TargetCurrencyId,
-                tc.code AS TargetCurrencyCode,
-                tc.name AS TargetCurrencyName,
-                tc.sign AS TargetCurrencySign
-                FROM ExchangeRate er1
-                JOIN ExchangeRate er2
+                (er2.Rate / er1.Rate)
+                FROM ExchangeRates er1
+                JOIN ExchangeRates er2
                  ON er1.BaseCurrencyId = er2.BaseCurrencyId
                 JOIN Currencies bc
                     ON er1.BaseCurrencyId = bc.id
                 JOIN Currencies tc
                     ON er2.TargetCurrencyId = tc.id
-                WHERE er1.TargetCurrencyId = (SELECT id FROM Currency WHERE code = ?)
-                  AND er2.TargetCurrencyId = (SELECT id FROM Currency WHERE code = ?)
-                  AND er1.BaseCurrencyId = (SELECT id FROM Currency WHERE code = ?);
+                WHERE er1.TargetCurrencyId = (SELECT id FROM Currencies WHERE code = ?)
+                  AND er2.TargetCurrencyId = (SELECT id FROM Currencies WHERE code = ?)
+                  AND er1.BaseCurrencyId = (SELECT id FROM Currencies WHERE code = ?);
             """;
 
     public List<ExchangeRate> findAll() {
@@ -115,20 +110,71 @@ public class ExchangeRateDao {
         return Optional.empty();
     }
 
-    public Optional<ExchangeRate> findRateByIntermediateCurrency(String base, String target, String intermediateCurrency) {
+    public Optional<ResponseExchangeDTO> findDirectExchangeRate(RequestExchangeDTO dto) {
+        Optional<ExchangeRate> exchangeRateDirect = this.findByCodes(dto.getBaseCurrencyCode(), dto.getTargetCurrencyCode());
+        if (exchangeRateDirect.isPresent()) {
+            var responseExchangeRateDTO = new ResponseExchangeRateDTO(
+                    exchangeRateDirect.get().getBaseCurrency(),
+                    exchangeRateDirect.get().getTargetCurrency(),
+                    exchangeRateDirect.get().getRate()
+            );
+            return Optional.of(ExchangeRateWithAmountMapper.toDTO(
+                    responseExchangeRateDTO,
+                    dto.getAmount())
+            );
+
+        }
+        return Optional.empty();
+    }
+
+    public Optional<ResponseExchangeDTO> findReversedExchangeRate(RequestExchangeDTO dto) {
+        Optional<ExchangeRate> reversedRate = this.findByCodes(dto.getTargetCurrencyCode(), dto.getBaseCurrencyCode());
+        if (reversedRate.isPresent()) {
+            BigDecimal rate = BigDecimal.ONE.divide(reversedRate.get().getRate(), 6, RoundingMode.HALF_UP);
+            var responseExchangeRateDTO = new ResponseExchangeRateDTO(
+                    reversedRate.get().getBaseCurrency(),
+                    reversedRate.get().getTargetCurrency(),
+                    rate
+            );
+            return Optional.of(ExchangeRateWithAmountMapper.toDTO(
+                    responseExchangeRateDTO,
+                    dto.getAmount())
+            );
+        }
+        return Optional.empty();
+    }
+
+    public Optional<ResponseExchangeDTO> findIntermediateExchangeRate(RequestExchangeDTO dto, String intermediateCurrencyCode) {
+        BigDecimal rate = findRateByIntermediateCurrency(dto, intermediateCurrencyCode);
+        if (!Objects.equals(rate, BigDecimal.ZERO)) {
+            RequestExchangeRateDTO requestExchangeRateDTO = new RequestExchangeRateDTO(
+                    dto.getBaseCurrencyCode(),
+                    intermediateCurrencyCode,
+                    rate
+            );
+            ResponseExchangeRateDTO responseExchangeRate = getResponseExchangeRate(requestExchangeRateDTO);
+            return Optional.of(ExchangeRateWithAmountMapper.toDTO(
+                    responseExchangeRate,
+                    dto.getAmount())
+            );
+        }
+        return Optional.empty();
+    }
+
+    public BigDecimal findRateByIntermediateCurrency(RequestExchangeDTO requestExchangeDTO, String intermediateCurrencyCode) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_GET_RATE_BY_INTERMEDIATE_CURRENCY)) {
-            statement.setString(1, base);
-            statement.setString(2, target);
-            statement.setString(3, intermediateCurrency);
+            statement.setString(1, requestExchangeDTO.getBaseCurrencyCode());
+            statement.setString(2, requestExchangeDTO.getTargetCurrencyCode());
+            statement.setString(3, intermediateCurrencyCode);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
-                    return Optional.of(ExchangeRateMapper.mapRowToExchangeRate(resultSet));
+                    return resultSet.getBigDecimal(1);
                 }
             }
         } catch (SQLException e) {
             throw new DataAccessException();
         }
-        return Optional.empty();
+        return BigDecimal.ZERO;
     }
 
     public ResponseExchangeRateDTO save(RequestExchangeRateDTO requestExchangeRateDTO) {

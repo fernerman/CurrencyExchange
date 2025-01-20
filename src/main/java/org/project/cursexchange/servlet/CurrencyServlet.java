@@ -6,7 +6,7 @@ import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.CurrencyNotValidCodeException;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
-import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.util.ErrorResponse;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;

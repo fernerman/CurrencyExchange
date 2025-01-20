@@ -1,8 +1,8 @@
 package org.project.cursexchange.service;
 
-import org.project.cursexchange.dto.ConvertAmountExchangeRateDTO;
-import org.project.cursexchange.dto.AmountExchangeRatesDTO;
+import org.project.cursexchange.dto.ResponseExchangeDTO;
+import org.project.cursexchange.dto.RequestExchangeDTO;
 
 public interface ExchangeCurrencyService {
-    ConvertAmountExchangeRateDTO getExchangeCurrencyWithConvertedAmount(AmountExchangeRatesDTO getConvertedAmountExchangeRatesDTO);
+    ResponseExchangeDTO exchangeCurrencies(RequestExchangeDTO getConvertedRequestExchangeDTO);
 }

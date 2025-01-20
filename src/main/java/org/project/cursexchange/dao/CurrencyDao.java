@@ -1,6 +1,6 @@
 package org.project.cursexchange.dao;
 
-import org.project.cursexchange.dto.SaveCurrencyDTO;
+import org.project.cursexchange.dto.RequestCurrencyDTO;
 import org.project.cursexchange.exception.CurrencyExistException;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
@@ -61,7 +61,7 @@ public class CurrencyDao {
         return currencies;
     }
 
-    public Currency save(SaveCurrencyDTO currency) {
+    public Currency save(RequestCurrencyDTO currency) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_SAVE)) {
             statement.setString(1, currency.getCode());
             statement.setString(2, currency.getName());

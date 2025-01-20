@@ -1,7 +1,7 @@
 package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.dao.ExchangeRateDao;
-import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.util.ErrorResponse;
 import org.project.cursexchange.dto.RequestExchangeRateDTO;
 import org.project.cursexchange.dto.ResponseExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
@@ -60,15 +60,7 @@ public class ExchangeRateServlet extends HttpServlet {
             response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(e)));
         }
     }
-    private String getRateFromForm(HttpServletRequest request) throws IOException {
-        // Reading the request body as a JSON string
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = request.getReader().readLine()) != null) {
-            sb.append(line);
-        }
-        return sb.toString();
-    }
+
     public void doPatch(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
 
@@ -115,5 +107,15 @@ public class ExchangeRateServlet extends HttpServlet {
             return path.substring(1);
         }
         throw new CurrencyCodeNotFoundInPath();
+    }
+
+    private String getRateFromForm(HttpServletRequest request) throws IOException {
+        // Reading the request body as a JSON string
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = request.getReader().readLine()) != null) {
+            sb.append(line);
+        }
+        return sb.toString();
     }
 }

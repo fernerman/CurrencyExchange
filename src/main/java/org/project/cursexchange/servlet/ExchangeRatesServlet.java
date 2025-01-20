@@ -1,7 +1,7 @@
 package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.dao.ExchangeRateDao;
-import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.util.ErrorResponse;
 import org.project.cursexchange.dto.RequestExchangeRateDTO;
 import org.project.cursexchange.dto.ResponseExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
