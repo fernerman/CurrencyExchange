@@ -1,37 +1,37 @@
 package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.dao.ExchangeRateDao;
-import org.project.cursexchange.dto.SaveExchangeRateDTO;
-import org.project.cursexchange.exception.*;
 import org.project.cursexchange.dto.ErrorResponse;
+import org.project.cursexchange.dto.RequestExchangeRateDTO;
+import org.project.cursexchange.dto.ResponseExchangeRateDTO;
+import org.project.cursexchange.exception.CurrencyExchangeNotFound;
+import org.project.cursexchange.exception.CurrencyExistException;
+import org.project.cursexchange.exception.CurrencyNotFound;
+import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.ExchangeRate;
 import org.project.cursexchange.service.ExchangeRateValidationService;
 import org.project.cursexchange.util.JsonConverter;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+
+;
 
 
 @WebServlet("/exchangeRates")
 public class ExchangeRatesServlet extends HttpServlet {
 
-    private ExchangeRateDao exchangeRateDao;
-    private ExchangeRateValidationService exchangeRateValidationService;
     private final String baseCurrencyCodeParameter = "baseCurrencyCode";
     private final String targetCurrencyCodeParameter = "targetCurrencyCode";
     private final String rateParameter = "rate";
+    private final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
+    private final ExchangeRateValidationService exchangeRateValidationService = new ExchangeRateValidationService();
 
-    @Override
-    public void init() throws ServletException {
-        exchangeRateDao = new ExchangeRateDao();
-        exchangeRateValidationService=new ExchangeRateValidationService();
-    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws IOException {
@@ -51,9 +51,9 @@ public class ExchangeRatesServlet extends HttpServlet {
             String baseCurrencyCode = request.getParameter(baseCurrencyCodeParameter);
             String targetCurrencyCode = request.getParameter(targetCurrencyCodeParameter);
             String rate = request.getParameter(rateParameter);
-            BigDecimal rateByDecimal=exchangeRateValidationService.getDecimal(rate);
-            SaveExchangeRateDTO saveExchangeRateDTO=new SaveExchangeRateDTO(baseCurrencyCode, targetCurrencyCode, rateByDecimal);
-            ExchangeRate exchangeRate =exchangeRateDao.save(saveExchangeRateDTO);
+            BigDecimal rateByDecimal = exchangeRateValidationService.getDecimal(rate);
+            RequestExchangeRateDTO requestExchangeRateDTO = new RequestExchangeRateDTO(baseCurrencyCode, targetCurrencyCode, rateByDecimal);
+            ResponseExchangeRateDTO exchangeRate = exchangeRateDao.save(requestExchangeRateDTO);
             response.getWriter().write(JsonConverter.convertToJson(exchangeRate));
             response.setStatus(HttpServletResponse.SC_CREATED);
         } catch (IllegalArgumentException ex) {

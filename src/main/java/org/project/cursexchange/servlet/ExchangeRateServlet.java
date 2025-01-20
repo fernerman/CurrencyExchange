@@ -2,7 +2,7 @@ package org.project.cursexchange.servlet;
 
 import org.project.cursexchange.dao.ExchangeRateDao;
 import org.project.cursexchange.dto.ErrorResponse;
-import org.project.cursexchange.dto.SaveExchangeRateDTO;
+import org.project.cursexchange.dto.RequestExchangeRateDTO;
 import org.project.cursexchange.exception.CurrencyCodeNotFoundInPath;
 import org.project.cursexchange.exception.CurrencyExchangeNotFound;
 import org.project.cursexchange.exception.CurrencyNotFound;
@@ -68,8 +68,8 @@ public class ExchangeRateServlet extends HttpServlet {
             String baseCode = correctPath.substring(0, MAX_LENGTH_CODE);
             String targetCode = correctPath.substring(MAX_LENGTH_CODE);
             BigDecimal rateByDigit = exchangeRateValidationService.getDecimal(rateFromUser);
-            SaveExchangeRateDTO saveExchangeRateDTO = new SaveExchangeRateDTO(baseCode, targetCode, rateByDigit);
-            ExchangeRate exchangeRate = exchangeRateDao.update(saveExchangeRateDTO);
+            RequestExchangeRateDTO requestExchangeRateDTO = new RequestExchangeRateDTO(baseCode, targetCode, rateByDigit);
+            ExchangeRate exchangeRate = exchangeRateDao.update(requestExchangeRateDTO);
             response.getWriter().write(JsonConverter.convertToJson(exchangeRate));
             response.setStatus(HttpServletResponse.SC_OK);
         } catch (IllegalArgumentException e) {

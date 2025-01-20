@@ -1,8 +1,11 @@
 package org.project.cursexchange.dao;
 
-import org.project.cursexchange.dto.SaveExchangeRateDTO;
+import org.project.cursexchange.dto.RequestExchangeRateDTO;
+import org.project.cursexchange.dto.ResponseExchangeRateDTO;
+import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.mapper.ExchangeRateMapper;
+import org.project.cursexchange.model.Currency;
 import org.project.cursexchange.model.ExchangeRate;
 import org.project.cursexchange.util.DatabaseConnection;
 
@@ -18,21 +21,9 @@ public class ExchangeRateDao {
             JOIN Currencies bc ON er.BaseCurrencyId = bc.id
             JOIN Currencies tc ON er.TargetCurrencyId = tc.id
             """;
-
+    private final CurrencyDao currencyDao = new CurrencyDao();
     private final String SQL_FIND_BY_ID = """
-            SELECT
-                er.id,
-                er.Rate,
-                er.BaseCurrencyId AS ExchangeRateBaseCurrencyId,
-                er.TargetCurrencyId AS ExchangeRateTargetCurrencyId,
-                bc.id AS BaseCurrencyId,
-                bc.code AS BaseCurrencyCode,
-                bc.FullName AS BaseCurrencyName,
-                bc.Sign AS BaseCurrencySign,
-                tc.id AS TargetCurrencyId,
-                tc.code AS TargetCurrencyCode,
-                tc.FullName AS TargetCurrencyName,
-                tc.Sign AS TargetCurrencySign
+            SELECT *
             FROM ExchangeRates er
             JOIN Currencies bc ON er.BaseCurrencyId = bc.id
             JOIN Currencies tc ON er.TargetCurrencyId = tc.id
@@ -51,7 +42,6 @@ public class ExchangeRateDao {
     private final String SQL_SAVE = """
             INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate)
             VALUES (?, ?, ?)
-            RETURNING id
             """;
 
     private final String SQL_UPDATE = """
@@ -160,32 +150,46 @@ public class ExchangeRateDao {
         return Optional.empty();
     }
 
-    public ExchangeRate save(SaveExchangeRateDTO exchangeRateDTO) {
+    public ResponseExchangeRateDTO save(RequestExchangeRateDTO responseExchangeRateDTO) {
+        ResponseExchangeRateDTO responseExchangeRate = getResponseExchangeRate(responseExchangeRateDTO);
         try (Connection conn = DatabaseConnection.getConnection()) {
-            try (PreparedStatement statement = conn.prepareStatement(SQL_SAVE)) {
-                statement.setBigDecimal(1, exchangeRateDTO.getRate());
-                statement.setString(2, exchangeRateDTO.getBaseCurrencyCode());
-                statement.setString(3, exchangeRateDTO.getTargetCurrencyCode());
-                ResultSet resultSet = statement.executeQuery();
-                if (resultSet.next()) {
-                    Optional<ExchangeRate> savedExchangeRate = findById(resultSet.getInt("id"));
-                    if (savedExchangeRate.isPresent()) {
-                        return savedExchangeRate.get();
+            try (PreparedStatement statement = conn.prepareStatement(SQL_SAVE, Statement.RETURN_GENERATED_KEYS)) {
+                statement.setInt(1, (int) responseExchangeRate.getBaseCurrency().getId());
+                statement.setInt(2, (int) responseExchangeRate.getTargetCurrency().getId());
+                statement.setBigDecimal(3, responseExchangeRate.getRate());
+                statement.executeUpdate();
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        responseExchangeRate.setId(generatedKeys.getLong(1));
+                        return responseExchangeRate;
+                    } else {
+                        throw new SQLException("Creating record failed.");
                     }
-
                 }
             }
         } catch (SQLException e) {
             throw new DataAccessException();
         }
-        throw new DataAccessException();
     }
 
-    public ExchangeRate update(SaveExchangeRateDTO saveExchangeRateDTO) {
+    private ResponseExchangeRateDTO getResponseExchangeRate(RequestExchangeRateDTO requestExchangeRateDTO) {
+        Optional<Currency> base = currencyDao.findByCode(requestExchangeRateDTO.getBaseCurrencyCode());
+        Optional<Currency> target = currencyDao.findByCode(requestExchangeRateDTO.getTargetCurrencyCode());
+        if (base.isPresent() && target.isPresent()) {
+            return new ResponseExchangeRateDTO(
+                    base.get(),
+                    target.get(),
+                    requestExchangeRateDTO.getRate()
+            );
+        }
+        throw new CurrencyNotFound();
+    }
+
+    public ExchangeRate update(RequestExchangeRateDTO requestExchangeRateDTO) {
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_UPDATE)) {
-            statement.setBigDecimal(1, saveExchangeRateDTO.getRate());
-            statement.setString(2, saveExchangeRateDTO.getBaseCurrencyCode());
-            statement.setString(3, saveExchangeRateDTO.getTargetCurrencyCode());
+            statement.setBigDecimal(1, requestExchangeRateDTO.getRate());
+            statement.setString(2, requestExchangeRateDTO.getBaseCurrencyCode());
+            statement.setString(3, requestExchangeRateDTO.getTargetCurrencyCode());
             ResultSet resultSet = statement.executeQuery();
             return ExchangeRateMapper.mapRowToExchangeRate(resultSet);
         } catch (SQLException ex) {
