@@ -21,9 +21,9 @@ import java.util.List;
 public class CurrenciesServlet extends HttpServlet {
     private CurrencyDao currencyDao;
     private CurrencyValidationService currencyValidationService;
-    private final String requestParameterCode = "code";
-    private final String requestParameterName = "name";
-    private final String requestParameterSign = "sign";
+    private static final String REQUEST_PARAMETER_CODE = "code";
+    private static final String REQUEST_PARAMETER_NAME = "name";
+    private static final String REQUEST_PARAMETER_SIGN = "sign";
 
     @Override
     public void init() throws ServletException {
@@ -46,9 +46,9 @@ public class CurrenciesServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            String code = request.getParameter(requestParameterCode);
-            String name = request.getParameter(requestParameterName);
-            String sign = request.getParameter(requestParameterSign);
+            String code = request.getParameter(REQUEST_PARAMETER_CODE);
+            String name = request.getParameter(REQUEST_PARAMETER_NAME);
+            String sign = request.getParameter(REQUEST_PARAMETER_SIGN);
             currencyValidationService.validateCurrency(code, name, sign);
             RequestCurrencyDTO CurrencySaveRequestDTO = new RequestCurrencyDTO( code, name, sign);
             Currency currency = currencyDao.save(CurrencySaveRequestDTO);

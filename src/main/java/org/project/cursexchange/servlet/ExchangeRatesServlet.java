@@ -26,11 +26,11 @@ import java.util.List;
 @WebServlet("/exchangeRates")
 public class ExchangeRatesServlet extends HttpServlet {
 
-    private final String baseCurrencyCodeParameter = "baseCurrencyCode";
-    private final String targetCurrencyCodeParameter = "targetCurrencyCode";
-    private final String rateParameter = "rate";
-    private final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
-    private final ExchangeRateValidationService exchangeRateValidationService = new ExchangeRateValidationService();
+    private static final String BASE_CURRENCY_CODE_PARAMETER = "baseCurrencyCode";
+    private static final String TARGET_CURRENCY_CODE_PARAMETER = "targetCurrencyCode";
+    private static final String RATE_PARAMETER = "rate";
+    private  final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
+    private  final ExchangeRateValidationService exchangeRateValidationService = new ExchangeRateValidationService();
 
 
     @Override
@@ -48,9 +48,9 @@ public class ExchangeRatesServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            String baseCurrencyCode = request.getParameter(baseCurrencyCodeParameter);
-            String targetCurrencyCode = request.getParameter(targetCurrencyCodeParameter);
-            String rate = request.getParameter(rateParameter);
+            String baseCurrencyCode = request.getParameter(BASE_CURRENCY_CODE_PARAMETER);
+            String targetCurrencyCode = request.getParameter(TARGET_CURRENCY_CODE_PARAMETER);
+            String rate = request.getParameter(RATE_PARAMETER);
             BigDecimal rateByDecimal = exchangeRateValidationService.getDecimal(rate);
             RequestExchangeRateDTO requestExchangeRateDTO = new RequestExchangeRateDTO(baseCurrencyCode, targetCurrencyCode, rateByDecimal);
             ResponseExchangeRateDTO exchangeRate = exchangeRateDao.save(requestExchangeRateDTO);

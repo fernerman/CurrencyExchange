@@ -24,8 +24,7 @@ import java.util.Optional;
 @WebServlet("/exchangeRate/*")
 public class ExchangeRateServlet extends HttpServlet {
 
-    private final int MAX_LENGTH_CODE = 3;
-    private final String rateParameter = "Rate";
+    private static final int MAX_LENGTH_CODE = 3;
     private ExchangeRateDao exchangeRateDao;
     private ExchangeRateValidationService exchangeRateValidationService;
 

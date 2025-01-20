@@ -1,4 +1,4 @@
-package org.project.cursexchange;
+package org.project.cursexchange.util;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;

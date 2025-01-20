@@ -50,7 +50,9 @@ public class ExchangeRateDao {
 
     private final String SQL_UPDATE = """
             UPDATE ExchangeRates
-            SET Rate = ?;
+            SET Rate = ?
+            WHERE BaseCurrencyId = (SELECT id FROM Currencies WHERE code = ?)
+              AND TargetCurrencyId = (SELECT id FROM Currencies WHERE code = ?);
             """;
 
     private final String SQL_GET_RATE_BY_INTERMEDIATE_CURRENCY = """
@@ -59,10 +61,6 @@ public class ExchangeRateDao {
                 FROM ExchangeRates er1
                 JOIN ExchangeRates er2
                  ON er1.BaseCurrencyId = er2.BaseCurrencyId
-                JOIN Currencies bc
-                    ON er1.BaseCurrencyId = bc.id
-                JOIN Currencies tc
-                    ON er2.TargetCurrencyId = tc.id
                 WHERE er1.TargetCurrencyId = (SELECT id FROM Currencies WHERE code = ?)
                   AND er2.TargetCurrencyId = (SELECT id FROM Currencies WHERE code = ?)
                   AND er1.BaseCurrencyId = (SELECT id FROM Currencies WHERE code = ?);
@@ -216,6 +214,8 @@ public class ExchangeRateDao {
         ResponseExchangeRateDTO responseExchangeRate = getResponseExchangeRate(requestExchangeRateDTO);
         try (PreparedStatement statement = DatabaseConnection.getConnection().prepareStatement(SQL_UPDATE, Statement.RETURN_GENERATED_KEYS)) {
             statement.setBigDecimal(1, requestExchangeRateDTO.getRate());
+            statement.setString(2, requestExchangeRateDTO.getBaseCurrencyCode());
+            statement.setString(3, requestExchangeRateDTO.getTargetCurrencyCode());
             statement.executeUpdate();
             try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
