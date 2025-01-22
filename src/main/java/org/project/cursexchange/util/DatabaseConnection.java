@@ -9,10 +9,15 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
     private static final String DEFAULT_DRIVER = "org.sqlite.JDBC";
-
-    public static Connection getConnection() {
+    static {
         try {
             Class.forName(DEFAULT_DRIVER);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Database class not found: " + e.getMessage(), e);
+        }
+    }
+    public static Connection getConnection() {
+        try {
             URL resource = DatabaseConnection.class.getClassLoader().getResource("database.db");
             if (resource == null) {
                 throw new RuntimeException("Database file not found in resources folder!");
@@ -23,8 +28,6 @@ public class DatabaseConnection {
             throw new RuntimeException("Database file not found in resources folder!");
         } catch (SQLException e) {
             throw new RuntimeException("Failed to connect to SQLite database: " + e.getMessage(), e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Database class not found: " + e.getMessage(), e);
         }
     }
 }

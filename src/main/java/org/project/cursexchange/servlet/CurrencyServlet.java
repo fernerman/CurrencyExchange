@@ -1,37 +1,30 @@
 package org.project.cursexchange.servlet;
 
-import org.project.cursexchange.util.JsonConverter;
 import org.project.cursexchange.dao.CurrencyDao;
 import org.project.cursexchange.exception.CurrencyNotFound;
 import org.project.cursexchange.exception.CurrencyNotValidCodeException;
-import org.project.cursexchange.exception.DataAccessException;
 import org.project.cursexchange.model.Currency;
-import org.project.cursexchange.util.ErrorResponse;
+import org.project.cursexchange.util.CurrencyValidator;
+import org.project.cursexchange.util.JsonConverter;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Optional;
 
 
 @WebServlet("/currency/*")
 public class CurrencyServlet extends HttpServlet {
-    private CurrencyDao currencyDao;
-    private final static int MAX_LENGTH_CODE = 3;
-
-    @Override
-    public void init() throws ServletException {
-        currencyDao = new CurrencyDao();
-    }
-
+    private final CurrencyValidator currencyValidator = new CurrencyValidator();
+    private CurrencyDao currencyDao = new CurrencyDao();
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse response) throws IOException {
         try {
             String path = req.getPathInfo();
-            String code = getValidCode(path);
+            String code = currencyValidator.validateCurrencyCodeLength(path);
             Optional<Currency> currencyFoundByCode = currencyDao.findByCode(code);
             if (currencyFoundByCode.isPresent()) {
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -41,24 +34,12 @@ public class CurrencyServlet extends HttpServlet {
             response.getWriter().write(JsonConverter.convertToJson(currencyFoundByCode));
         } catch (CurrencyNotValidCodeException ex) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(ex)));
+            response.getWriter().write(JsonConverter.convertToJson(JsonConverter.convertToJson(ex)));
         } catch (CurrencyNotFound ex) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(ex)));
-        } catch (DataAccessException ex) {
+            response.getWriter().write(JsonConverter.convertToJson(JsonConverter.convertToJson(ex)));
+        } catch (SQLException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.getWriter().write(JsonConverter.convertToJson(ErrorResponse.sendError(ex)));
         }
-    }
-
-    private String getValidCode(String path) throws CurrencyNotValidCodeException {
-        if (path == null || path.isEmpty()) {
-            throw new CurrencyNotValidCodeException();
-        }
-        String regex = String.format("^/([A-Za-z]{%d})$", MAX_LENGTH_CODE);
-        if (path.trim().matches(regex)) {
-            return path.substring(1);
-        }
-        throw new CurrencyNotValidCodeException();
     }
 }

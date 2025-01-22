@@ -1,0 +1,67 @@
+# Системные файлы и папки
+.DS_Store
+Thumbs.db
+*.log
+*.bak
+
+# Каталоги сборки и временные файлы
+build/
+out/
+target/
+*.class
+
+# Maven и Gradle
+*.iml
+.idea/
+.gradle/
+build.gradle
+settings.gradle
+mvnw
+mvnw.cmd
+*.log
+*.jar
+*.war
+*.ear
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# NetBeans
+nbproject/
+*.nb-gradle/
+build/
+dist/
+
+# VS Code
+.vscode/
+
+# Настройки операционных систем
+*.swp
+*.swo
+*.tmp
+
+# Секретные файлы
+*.env
+*.key
+*.pem
+*.crt
+*.p12
+*.jks
+
+# Логи сервера и временные файлы
+logs/
+tmp/
+work/
+
+# Локальные настройки
+*.properties
+

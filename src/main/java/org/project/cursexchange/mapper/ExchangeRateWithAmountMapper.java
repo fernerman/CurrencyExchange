@@ -10,7 +10,6 @@ public class ExchangeRateWithAmountMapper {
     public static ResponseExchangeDTO toDTO(
             ResponseExchangeRateDTO responseExchangeRateDTO,
             BigDecimal amount) {
-
         return new ResponseExchangeDTO(
                 responseExchangeRateDTO.getBaseCurrency(),
                 responseExchangeRateDTO.getTargetCurrency(),

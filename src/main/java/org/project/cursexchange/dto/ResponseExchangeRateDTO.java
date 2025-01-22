@@ -13,7 +13,6 @@ public class ResponseExchangeRateDTO {
     private Currency baseCurrency;
     private Currency targetCurrency;
     private BigDecimal rate;
-
     public ResponseExchangeRateDTO(Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
         this.baseCurrency = baseCurrency;
         this.targetCurrency = targetCurrency;
