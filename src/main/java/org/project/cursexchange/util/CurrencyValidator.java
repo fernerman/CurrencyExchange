@@ -1,9 +1,22 @@
 package org.project.cursexchange.service;
 
+import org.project.cursexchange.exception.CurrencyNotValidCodeException;
+
 public class CurrencyValidationService {
     public static final int MAX_LENGTH_CODE = 3;
     public static final int MAX_LENGTH_NAME = 15;
     public static final int MAX_LENGTH_SIGN = 3;
+
+    private  String getValidCode(String path) throws CurrencyNotValidCodeException {
+        if (path == null || path.isEmpty()) {
+            throw new CurrencyNotValidCodeException();
+        }
+        String regex = String.format("^/([A-Za-z]{%d})$", MAX_LENGTH_CODE);
+        if (path.trim().matches(regex)) {
+            return path.substring(1);
+        }
+        throw new CurrencyNotValidCodeException();
+    }
 
     public void validateCurrency(String code, String name, String sign) {
         if (code == null || name == null || sign == null || code.isBlank() || name.isBlank() || sign.isBlank()) {
